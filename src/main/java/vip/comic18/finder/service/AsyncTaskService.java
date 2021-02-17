@@ -54,7 +54,8 @@ public class AsyncTaskService {
         for(String chapter : chapters) {
             ChapterEntity chapterEntity = new ChapterEntity();
             chapterEntity.setUrl(host + StrUtil.subBetween(chapter, "href=\"", "\""));
-            chapter = StrUtil.removeAll(chapter, '\n');
+            chapter = StrUtil.removeAll(chapter, '\n', '\r');
+            chapter = StrUtil.subAfter(chapter, "<li", false);
             String[] nameAndDate = StrUtil.subBetweenAll(chapter, ">", "<");
             chapterEntity.setName(StrUtil.replaceChars(nameAndDate[ 0 ], new char[]{'/', '\\'}, StrUtil.DASHED));
             chapterEntity.setUpdatedAt(DateUtil.parse(nameAndDate[ nameAndDate.length - 1 ]));
