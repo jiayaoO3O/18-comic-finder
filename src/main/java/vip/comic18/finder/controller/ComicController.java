@@ -24,7 +24,7 @@ public class ComicController {
         if(homePage == null) {
             return "homePage为空";
         }
-        if(!HttpUtil.isHttps(homePage) || !HttpUtil.isHttp(homePage)) {
+        if(!HttpUtil.isHttps(homePage) && !HttpUtil.isHttp(homePage)) {
             return StrUtil.format("homePage参数:[{}]并非http或https链接", homePage);
         }
         ComicEntity comicInfo = comicService.getComicInfo(homePage);
