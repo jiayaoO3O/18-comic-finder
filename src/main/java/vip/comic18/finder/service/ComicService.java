@@ -61,12 +61,13 @@ public class ComicService {
                     log.info("downloadComic->图片[{}]已下载,跳过该图片", photoFile.getName());
                     continue;
                 }
-                BufferedImage image = taskService.getImage(photo.getUrl()).get();
                 if(chapter.getUpdatedAt().after(DateUtil.parse("2020-10-27"))) {
-                    log.info("downloadComic->该章节:[{}]图片:[{}]需要进行反爬虫处理", chapter.getName(), photo.getName());
+                    log.info("downloadComic->该章节:[{}]图片:[{}]需要进行反反爬虫处理", chapter.getName(), photo.getName());
+                    BufferedImage image = taskService.getImage(photo.getUrl()).get();
                     image = taskService.reverseImage(image).get();
+                    taskService.saveImage(chapterDir.getPath() + File.separatorChar + photo.getName(), image);
                 }
-                taskService.saveImage(chapterDir.getPath() + File.separatorChar + photo.getName(), image);
+                taskService.saveImage(HttpUtil.createPost(photo.getUrl()), photoFile);
             }
         }
     }

@@ -6,6 +6,7 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ import vip.comic18.finder.entity.PhotoEntity;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +59,7 @@ public class AsyncTaskService {
             chapter = StrUtil.removeAll(chapter, '\n', '\r');
             chapter = StrUtil.subAfter(chapter, "<li", false);
             String[] nameAndDate = StrUtil.subBetweenAll(chapter, ">", "<");
-            chapterEntity.setName(StrUtil.replaceChars(nameAndDate[ 0 ], new char[]{'/', '\\'}, StrUtil.DASHED));
+            chapterEntity.setName(StrUtil.trim(StrUtil.replaceChars(nameAndDate[ 0 ], new char[]{'/', '\\'}, StrUtil.DASHED)));
             chapterEntity.setUpdatedAt(DateUtil.parse(nameAndDate[ nameAndDate.length - 1 ]));
             chapterEntities.add(chapterEntity);
             log.info(chapterEntity.toString());
@@ -89,8 +91,9 @@ public class AsyncTaskService {
         for(String photo : photos) {
             PhotoEntity photoEntity = new PhotoEntity();
             photo = StrUtil.removeAll(photo, " id=\"");
-            photoEntity.setUrl(StrUtil.split(photo, "\"")[ 0 ]);
-            photoEntity.setName(StrUtil.split(photo, "\"")[ 1 ]);
+            String[] urlAndName = StrUtil.split(photo, "\"");
+            photoEntity.setUrl(StrUtil.trim(urlAndName[ 0 ]));
+            photoEntity.setName(StrUtil.trim(urlAndName[ 1 ]));
             photoEntities.add(photoEntity);
             log.info(photoEntity.toString());
         }
@@ -100,16 +103,18 @@ public class AsyncTaskService {
     @Async
     public Future<BufferedImage> getImage(String url) {
         HttpResponse httpResponse = null;
-        while(httpResponse == null) {
+        BufferedImage bufferedImage = null;
+        while(httpResponse == null || bufferedImage == null) {
             try {
                 ThreadUtil.sleep(RandomUtil.randomInt(2) * 1000L);
                 httpResponse = HttpUtil.createPost(url).cookie(cookie).setHttpProxy(proxyHost, proxyPort).execute();
+                bufferedImage = ImgUtil.read(httpResponse.bodyStream());
             } catch(Exception e) {
                 log.error("getImage->下载图片失败:[{}]", e.getLocalizedMessage(), e);
             }
         }
         log.info("getImage->获取图片:[{}]成功", url);
-        return new AsyncResult<>(ImgUtil.read(httpResponse.bodyStream()));
+        return new AsyncResult<>(bufferedImage);
     }
 
 
@@ -143,5 +148,21 @@ public class AsyncTaskService {
         } catch(IOException e) {
             log.error("saveImage->{}", e.getLocalizedMessage(), e);
         }
+    }
+
+    @Async
+    public void saveImage(HttpRequest httpRequest, File photoFile) {
+        HttpResponse httpResponse = null;
+        while(httpResponse == null) {
+            try {
+                ThreadUtil.sleep(RandomUtil.randomInt(2) * 1000L);
+                httpResponse = httpRequest.cookie(cookie).setHttpProxy(proxyHost, proxyPort).execute();
+                log.info("getImage->获取图片:[{}]成功", photoFile.getName());
+            } catch(Exception e) {
+                log.error("saveImage->下载图片失败:[{}]", e.getLocalizedMessage(), e);
+            }
+        }
+        httpResponse.writeBody(photoFile);
+        log.info("saveImage->保存图片:[{}]成功", photoFile.getPath());
     }
 }
