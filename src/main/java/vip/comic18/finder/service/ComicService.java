@@ -60,8 +60,9 @@ public class ComicService {
                     BufferedImage image = taskService.getImage(photo.getUrl()).get();
                     image = taskService.reverseImage(image).get();
                     taskService.saveImage(chapterDir.getPath() + File.separatorChar + photo.getName(), image);
+                } else {
+                    taskService.saveImage(photo.getUrl(), photoFile);
                 }
-                taskService.saveImage(photo.getUrl(), photoFile);
             }
         }
     }
@@ -74,10 +75,10 @@ public class ComicService {
      */
     public ComicEntity getComicInfo(String comicHomePage) throws ExecutionException, InterruptedException {
         ComicEntity comicEntity = new ComicEntity();
-        HttpResponse httpResponse = null ;
-        if(StrUtil.contains(comicHomePage,"photo")) {
-            httpResponse = taskService.createPost(StrUtil.replace(comicHomePage,"photo","album")).setFollowRedirects(true).execute();
-        }else {
+        HttpResponse httpResponse = null;
+        if(StrUtil.contains(comicHomePage, "photo")) {
+            httpResponse = taskService.createPost(StrUtil.replace(comicHomePage, "photo", "album")).setFollowRedirects(true).execute();
+        } else {
             httpResponse = taskService.createPost(comicHomePage).execute();
         }
         String body = httpResponse.body();
