@@ -54,6 +54,9 @@ public class AsyncTaskService {
         body = StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>");
         String[] chapters = StrUtil.subBetweenAll(body, "<a ", "</li>");
         for(String chapter : chapters) {
+            if(comicHomePage.contains("photo") && !comicHomePage.equals(host + StrUtil.subBetween(chapter, "href=\"", "\""))) {
+                continue;
+            }
             ChapterEntity chapterEntity = new ChapterEntity();
             chapterEntity.setUrl(host + StrUtil.subBetween(chapter, "href=\"", "\""));
             chapter = StrUtil.removeAll(chapter, '\n', '\r');
@@ -168,7 +171,7 @@ public class AsyncTaskService {
 
     public HttpRequest createPost(String url) {
         HttpRequest post = HttpUtil.createPost(url);
-        if((proxyHost != null && proxyPort == 0)) {
+        if((proxyHost != null && proxyPort != 0)) {
             post.setHttpProxy(proxyHost, proxyPort);
         }
         if(cookie != null) {

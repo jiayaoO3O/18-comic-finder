@@ -74,7 +74,12 @@ public class ComicService {
      */
     public ComicEntity getComicInfo(String comicHomePage) throws ExecutionException, InterruptedException {
         ComicEntity comicEntity = new ComicEntity();
-        HttpResponse httpResponse = taskService.createPost(comicHomePage).execute();
+        HttpResponse httpResponse = null ;
+        if(StrUtil.contains(comicHomePage,"photo")) {
+            httpResponse = taskService.createPost(StrUtil.replace(comicHomePage,"photo","album")).setFollowRedirects(true).execute();
+        }else {
+            httpResponse = taskService.createPost(comicHomePage).execute();
+        }
         String body = httpResponse.body();
         String title = StrUtil.subBetween(body, "<div itemprop=\"name\" class=\"pull-left\">\n", "\n</div>");
         title = StrUtil.replaceChars(title, new char[]{'/', '\\'}, StrUtil.DASHED);
