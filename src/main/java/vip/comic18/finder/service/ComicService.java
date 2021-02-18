@@ -61,7 +61,7 @@ public class ComicService {
                     image = taskService.reverseImage(image).get();
                     taskService.saveImage(chapterDir.getPath() + File.separatorChar + photo.getName(), image);
                 } else {
-                    taskService.saveImage(photo.getUrl(), photoFile);
+                    taskService.getAndSaveImage(photo.getUrl(), photoFile);
                 }
             }
         }
@@ -76,14 +76,17 @@ public class ComicService {
     public ComicEntity getComicInfo(String comicHomePage) throws ExecutionException, InterruptedException {
         ComicEntity comicEntity = new ComicEntity();
         HttpResponse httpResponse = null;
-        if(StrUtil.contains(comicHomePage, "photo")) {
-            httpResponse = taskService.createPost(StrUtil.replace(comicHomePage, "photo", "album")).setFollowRedirects(true).execute();
-        } else {
-            httpResponse = taskService.createPost(comicHomePage).execute();
+        while(httpResponse==null) {
+            if(StrUtil.contains(comicHomePage, "photo")) {
+                httpResponse = taskService.createPost(StrUtil.replace(comicHomePage, "photo", "album")).setFollowRedirects(true).execute();
+            } else {
+                httpResponse = taskService.createPost(comicHomePage).execute();
+            }
         }
         String body = httpResponse.body();
         String title = StrUtil.subBetween(body, "<div itemprop=\"name\" class=\"pull-left\">\n", "\n</div>");
         title = StrUtil.replaceChars(title, new char[]{'/', '\\'}, StrUtil.DASHED);
+        title = StrUtil.trim(title);
         comicEntity.setTitle(title);
         List<ChapterEntity> chapterEntities = taskService.getChapterInfo(body, comicHomePage).get();
         for(ChapterEntity chapterEntity : chapterEntities) {

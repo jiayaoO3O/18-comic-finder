@@ -1,10 +1,10 @@
 package vip.comic18.finder.service;
 
+import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.img.ImgUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
@@ -51,6 +51,19 @@ public class AsyncTaskService {
     public Future<List<ChapterEntity>> getChapterInfo(String body, String comicHomePage) {
         List<ChapterEntity> chapterEntities = new ArrayList<>();
         String host = "https://" + StrUtil.subBetween(comicHomePage, "//", "/");
+        if(StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>") == null) {
+            //说明该漫画是单章漫画,没有区分章节,例如王者荣耀图鉴类型的https://18comic.vip/album/203961
+            String url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", ">開始閱讀<"), "href=\"", "/\"");
+            String name =StrUtil.trim(StrUtil.replaceChars(StrUtil.subBetween(body, "<div itemprop=\"name\" class=\"pull-left\">\n", "\n</div>"), new char[]{'/', '\\'}, StrUtil.DASHED));
+            DateTime updatedAt = DateUtil.parse(StrUtil.subBetween(StrUtil.subBetween(body, "itemprop=\"datePublished\"", "上架日期"), "content=\"", "\""));
+            ChapterEntity chapterEntity = new ChapterEntity();
+            chapterEntity.setUrl(host + url);
+            chapterEntity.setName(name);
+            chapterEntity.setUpdatedAt(updatedAt);
+            chapterEntities.add(chapterEntity);
+            log.info(chapterEntity.toString());
+            return new AsyncResult<>(chapterEntities);
+        }
         body = StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>");
         String[] chapters = StrUtil.subBetweenAll(body, "<a ", "</li>");
         for(String chapter : chapters) {
@@ -81,7 +94,7 @@ public class AsyncTaskService {
         List<PhotoEntity> photoEntities = new ArrayList<>();
         HttpResponse httpResponse = null;
         while(httpResponse == null) {
-            ThreadUtil.sleep(RandomUtil.randomInt(2) * 1000L);
+            ThreadUtil.sleep(2000L);
             try {
                 httpResponse = HttpUtil.createPost(chapterEntity.getUrl()).cookie(cookie).setHttpProxy(proxyHost, proxyPort).execute();
             } catch(Exception e) {
@@ -92,7 +105,7 @@ public class AsyncTaskService {
         body = StrUtil.subBetween(body, "<div class=\"row thumb-overlay-albums\" style=\"\">", "<div class=\"tab-content");
         String[] photos = StrUtil.subBetweenAll(body, "data-original=\"", "\" class=");
         for(String photo : photos) {
-            if(StrUtil.contains(photo,".jpg")) {
+            if(StrUtil.contains(photo, ".jpg")) {
                 photo = StrUtil.removeAll(photo, " id=\"");
                 String[] urlAndName = StrUtil.split(photo, "\"");
                 PhotoEntity photoEntity = new PhotoEntity();
@@ -111,7 +124,7 @@ public class AsyncTaskService {
         BufferedImage bufferedImage = null;
         while(httpResponse == null || bufferedImage == null) {
             try {
-                ThreadUtil.sleep(RandomUtil.randomInt(2) * 1000L);
+                ThreadUtil.sleep(2000L);
                 httpResponse = this.createPost(url).execute();
                 bufferedImage = ImgUtil.read(httpResponse.bodyStream());
             } catch(Exception e) {
@@ -156,17 +169,17 @@ public class AsyncTaskService {
     }
 
     @Async
-    public void saveImage(String url, File photoFile) {
+    public void getAndSaveImage(String url, File photoFile) {
         HttpResponse httpResponse = null;
         while(httpResponse == null) {
             try {
-                ThreadUtil.sleep(RandomUtil.randomInt(2) * 1000L);
+                ThreadUtil.sleep(2000L);
                 httpResponse = this.createPost(url).execute();
                 log.info("getImage->获取图片:[{}]成功", url);
                 httpResponse.writeBody(photoFile);
                 log.info("saveImage->保存图片:[{}]成功", photoFile.getPath());
             } catch(Exception e) {
-                log.error("saveImage->下载图片失败,正在重试:[{}]", e.getLocalizedMessage(), e);
+                log.error("getAndSaveImage->下载图片失败,正在重试:[{}]", e.getLocalizedMessage(), e);
             }
         }
     }
