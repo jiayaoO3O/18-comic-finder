@@ -95,7 +95,7 @@ public class AsyncTaskService {
             photoEntity.setUrl(StrUtil.trim(urlAndName[ 0 ]));
             photoEntity.setName(StrUtil.trim(urlAndName[ 1 ]));
             photoEntities.add(photoEntity);
-            log.info(photoEntity.toString());
+            log.info(StrUtil.format("chapter:[{}]-photo:[{}]-url:[{}]"), chapterEntity.getName(), photoEntity.getName(), photoEntity.getUrl());
         }
         return new AsyncResult<>(photoEntities);
     }
@@ -157,7 +157,7 @@ public class AsyncTaskService {
             try {
                 ThreadUtil.sleep(RandomUtil.randomInt(2) * 1000L);
                 httpResponse = httpRequest.cookie(cookie).setHttpProxy(proxyHost, proxyPort).execute();
-                log.info("getImage->获取图片:[{}]成功", photoFile.getName());
+                log.info("getImage->获取图片:[{}]成功", httpRequest.getUrl());
             } catch(Exception e) {
                 log.error("saveImage->下载图片失败:[{}]", e.getLocalizedMessage(), e);
             }

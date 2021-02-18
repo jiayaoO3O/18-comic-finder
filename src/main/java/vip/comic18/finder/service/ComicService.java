@@ -58,7 +58,7 @@ public class ComicService {
             for(PhotoEntity photo : photos) {
                 File photoFile = FileUtil.file(chapterDir.getPath() + File.separatorChar + photo.getName());
                 if(photoFile.exists()) {
-                    log.info("downloadComic->图片[{}]已下载,跳过该图片", photoFile.getName());
+                    log.info("downloadComic->图片[{}]已下载,跳过该图片", photoFile.getPath());
                     continue;
                 }
                 if(chapter.getUpdatedAt().after(DateUtil.parse("2020-10-27"))) {
