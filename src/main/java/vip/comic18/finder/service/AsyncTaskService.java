@@ -92,13 +92,15 @@ public class AsyncTaskService {
         body = StrUtil.subBetween(body, "<div class=\"row thumb-overlay-albums\" style=\"\">", "<div class=\"tab-content");
         String[] photos = StrUtil.subBetweenAll(body, "data-original=\"", "\" class=");
         for(String photo : photos) {
-            PhotoEntity photoEntity = new PhotoEntity();
-            photo = StrUtil.removeAll(photo, " id=\"");
-            String[] urlAndName = StrUtil.split(photo, "\"");
-            photoEntity.setUrl(StrUtil.trim(urlAndName[ 0 ]));
-            photoEntity.setName(StrUtil.trim(urlAndName[ 1 ]));
-            photoEntities.add(photoEntity);
-            log.info(StrUtil.format("chapter:[{}]-photo:[{}]-url:[{}]"), chapterEntity.getName(), photoEntity.getName(), photoEntity.getUrl());
+            if(StrUtil.contains(photo,".jpg")) {
+                photo = StrUtil.removeAll(photo, " id=\"");
+                String[] urlAndName = StrUtil.split(photo, "\"");
+                PhotoEntity photoEntity = new PhotoEntity();
+                photoEntity.setUrl(StrUtil.trim(urlAndName[ 0 ]));
+                photoEntity.setName(StrUtil.trim(urlAndName[ 1 ]));
+                photoEntities.add(photoEntity);
+                log.info(StrUtil.format("chapter:[{}]-photo:[{}]-url:[{}]"), chapterEntity.getName(), photoEntity.getName(), photoEntity.getUrl());
+            }
         }
         return new AsyncResult<>(photoEntities);
     }
@@ -161,12 +163,12 @@ public class AsyncTaskService {
                 ThreadUtil.sleep(RandomUtil.randomInt(2) * 1000L);
                 httpResponse = this.createPost(url).execute();
                 log.info("getImage->获取图片:[{}]成功", url);
+                httpResponse.writeBody(photoFile);
+                log.info("saveImage->保存图片:[{}]成功", photoFile.getPath());
             } catch(Exception e) {
                 log.error("saveImage->下载图片失败:[{}]", e.getLocalizedMessage(), e);
             }
         }
-        httpResponse.writeBody(photoFile);
-        log.info("saveImage->保存图片:[{}]成功", photoFile.getPath());
     }
 
     public HttpRequest createPost(String url) {
