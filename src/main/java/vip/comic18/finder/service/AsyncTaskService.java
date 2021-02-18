@@ -107,7 +107,7 @@ public class AsyncTaskService {
         while(httpResponse == null || bufferedImage == null) {
             try {
                 ThreadUtil.sleep(RandomUtil.randomInt(2) * 1000L);
-                httpResponse = HttpUtil.createPost(url).cookie(cookie).setHttpProxy(proxyHost, proxyPort).execute();
+                httpResponse = this.createPost(url).execute();
                 bufferedImage = ImgUtil.read(httpResponse.bodyStream());
             } catch(Exception e) {
                 log.error("getImage->下载图片失败:[{}]", e.getLocalizedMessage(), e);
@@ -151,18 +151,29 @@ public class AsyncTaskService {
     }
 
     @Async
-    public void saveImage(HttpRequest httpRequest, File photoFile) {
+    public void saveImage(String url, File photoFile) {
         HttpResponse httpResponse = null;
         while(httpResponse == null) {
             try {
                 ThreadUtil.sleep(RandomUtil.randomInt(2) * 1000L);
-                httpResponse = httpRequest.cookie(cookie).setHttpProxy(proxyHost, proxyPort).execute();
-                log.info("getImage->获取图片:[{}]成功", httpRequest.getUrl());
+                httpResponse = this.createPost(url).execute();
+                log.info("getImage->获取图片:[{}]成功", url);
             } catch(Exception e) {
                 log.error("saveImage->下载图片失败:[{}]", e.getLocalizedMessage(), e);
             }
         }
         httpResponse.writeBody(photoFile);
         log.info("saveImage->保存图片:[{}]成功", photoFile.getPath());
+    }
+
+    public HttpRequest createPost(String url) {
+        HttpRequest post = HttpUtil.createPost(url);
+        if((proxyHost != null && proxyPort == 0)) {
+            post.setHttpProxy(proxyHost, proxyPort);
+        }
+        if(cookie != null) {
+            post.cookie(cookie);
+        }
+        return post;
     }
 }

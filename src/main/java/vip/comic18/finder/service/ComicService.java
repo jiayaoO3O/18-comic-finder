@@ -4,7 +4,6 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpResponse;
-import cn.hutool.http.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,15 +29,6 @@ public class ComicService {
     @Value("${comic.download.path}")
     private String downloadPath;
 
-    @Value("${comic.proxy.host}")
-    private String proxyHost;
-
-    @Value("${comic.proxy.port}")
-    private int proxyPort;
-
-    @Value("${comic.download.cookie}")
-    private String cookie;
-
 
     /**
      * 下载漫画到本地
@@ -48,6 +38,10 @@ public class ComicService {
      */
     public void downloadComic(ComicEntity comicEntity) throws ExecutionException, InterruptedException {
         String title = comicEntity.getTitle();
+        if(downloadPath == null) {
+            log.error("downloadComic->下载路径downloadPath错误,无法下载文件,请确保配置文件中下载路径正确");
+            return;
+        }
         File comicDir = FileUtil.mkdir(downloadPath + File.separatorChar + title);
         for(ChapterEntity chapter : comicEntity.getChapters()) {
             File chapterDir = FileUtil.file(comicDir.getPath() + File.separatorChar + chapter.getName());
@@ -67,7 +61,7 @@ public class ComicService {
                     image = taskService.reverseImage(image).get();
                     taskService.saveImage(chapterDir.getPath() + File.separatorChar + photo.getName(), image);
                 }
-                taskService.saveImage(HttpUtil.createPost(photo.getUrl()), photoFile);
+                taskService.saveImage(photo.getUrl(), photoFile);
             }
         }
     }
@@ -80,7 +74,7 @@ public class ComicService {
      */
     public ComicEntity getComicInfo(String comicHomePage) throws ExecutionException, InterruptedException {
         ComicEntity comicEntity = new ComicEntity();
-        HttpResponse httpResponse = HttpUtil.createPost(comicHomePage).cookie(cookie).setHttpProxy(proxyHost, proxyPort).execute();
+        HttpResponse httpResponse = taskService.createPost(comicHomePage).execute();
         String body = httpResponse.body();
         String title = StrUtil.subBetween(body, "<div itemprop=\"name\" class=\"pull-left\">\n", "\n</div>");
         title = StrUtil.replaceChars(title, new char[]{'/', '\\'}, StrUtil.DASHED);
