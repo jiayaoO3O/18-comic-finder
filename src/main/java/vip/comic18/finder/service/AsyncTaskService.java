@@ -85,7 +85,7 @@ public class AsyncTaskService {
             try {
                 httpResponse = HttpUtil.createPost(chapterEntity.getUrl()).cookie(cookie).setHttpProxy(proxyHost, proxyPort).execute();
             } catch(Exception e) {
-                log.error("getPhotoInfo->获取图片信息失败:[{}]", e.getLocalizedMessage(), e);
+                log.error("getPhotoInfo->获取图片信息失败,正在重试:[{}]", e.getLocalizedMessage(), e);
             }
         }
         String body = httpResponse.body();
@@ -115,10 +115,10 @@ public class AsyncTaskService {
                 httpResponse = this.createPost(url).execute();
                 bufferedImage = ImgUtil.read(httpResponse.bodyStream());
             } catch(Exception e) {
-                log.error("getImage->下载图片失败:[{}]", e.getLocalizedMessage(), e);
+                log.error("getImage->下载图片失败,正在重试:[{}]", e.getLocalizedMessage(), e);
             }
         }
-        log.info("getImage->获取图片:[{}]成功", url);
+        log.info("getImage->下载图片:[{}]成功", url);
         return new AsyncResult<>(bufferedImage);
     }
 
@@ -166,7 +166,7 @@ public class AsyncTaskService {
                 httpResponse.writeBody(photoFile);
                 log.info("saveImage->保存图片:[{}]成功", photoFile.getPath());
             } catch(Exception e) {
-                log.error("saveImage->下载图片失败:[{}]", e.getLocalizedMessage(), e);
+                log.error("saveImage->下载图片失败,正在重试:[{}]", e.getLocalizedMessage(), e);
             }
         }
     }

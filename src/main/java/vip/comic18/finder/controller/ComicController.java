@@ -32,6 +32,7 @@ public class ComicController {
             return StrUtil.format("homePage参数:[{}]并非http或https链接", homePage);
         }
         ComicEntity comicInfo = comicService.getComicInfo(homePage);
+        log.info("开始下载[{}]:[{}]", comicInfo.getTitle(), homePage);
         comicService.downloadComic(comicInfo);
         log.info("下载[{}]完成", comicInfo.getTitle());
         return StrUtil.format("下载[{}]完成", comicInfo.getTitle());
