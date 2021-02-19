@@ -42,24 +42,20 @@ public class ComicService {
             log.error("downloadComic->下载路径downloadPath错误,无法下载文件,请确保配置文件中下载路径正确");
             return;
         }
-        File comicDir = FileUtil.mkdir(downloadPath + File.separatorChar + title);
         for(ChapterEntity chapter : comicEntity.getChapters()) {
-            File chapterDir = FileUtil.file(comicDir.getPath() + File.separatorChar + chapter.getName());
-            if(chapterDir == null || !chapterDir.exists()) {
-                chapterDir = FileUtil.mkdir(comicDir.getPath() + File.separatorChar + chapter.getName());
-            }
             List<PhotoEntity> photos = chapter.getPhotos();
             for(PhotoEntity photo : photos) {
-                File photoFile = FileUtil.file(chapterDir.getPath() + File.separatorChar + photo.getName());
+                String photoPath = downloadPath + File.separatorChar + title + File.separatorChar + chapter.getName() + File.separatorChar + photo.getName();
+                File photoFile = FileUtil.file(photoPath);
                 if(photoFile.exists()) {
-                    log.info("downloadComic->图片[{}]已下载,跳过该图片", photoFile.getPath());
+                    log.info("downloadComic->图片已下载,跳过[{}]", photoFile.getPath());
                     continue;
                 }
                 if(chapter.getUpdatedAt().after(DateUtil.parse("2020-10-27"))) {
                     log.info("downloadComic->该章节:[{}]图片:[{}]需要进行反反爬虫处理", chapter.getName(), photo.getName());
                     BufferedImage image = taskService.getImage(photo.getUrl()).get();
                     image = taskService.reverseImage(image).get();
-                    taskService.saveImage(chapterDir.getPath() + File.separatorChar + photo.getName(), image);
+                    taskService.saveImage(photoFile, image);
                 } else {
                     taskService.getAndSaveImage(photo.getUrl(), photoFile);
                 }
@@ -76,11 +72,15 @@ public class ComicService {
     public ComicEntity getComicInfo(String comicHomePage) throws ExecutionException, InterruptedException {
         ComicEntity comicEntity = new ComicEntity();
         HttpResponse httpResponse = null;
-        while(httpResponse==null) {
-            if(StrUtil.contains(comicHomePage, "photo")) {
-                httpResponse = taskService.createPost(StrUtil.replace(comicHomePage, "photo", "album")).setFollowRedirects(true).execute();
-            } else {
-                httpResponse = taskService.createPost(comicHomePage).execute();
+        while(httpResponse == null) {
+            try {
+                if(StrUtil.contains(comicHomePage, "photo")) {
+                    httpResponse = taskService.createPost(StrUtil.replace(comicHomePage, "photo", "album")).setFollowRedirects(true).execute();
+                } else {
+                    httpResponse = taskService.createPost(comicHomePage).execute();
+                }
+            } catch(Exception e) {
+                log.error("getComicInfo->漫画首页信息失败,正在重试:[{}]", e.getLocalizedMessage(), e);
             }
         }
         String body = httpResponse.body();

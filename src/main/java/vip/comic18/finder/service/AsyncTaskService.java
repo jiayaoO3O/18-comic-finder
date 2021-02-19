@@ -3,7 +3,6 @@ package vip.comic18.finder.service;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.img.ImgUtil;
-import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
@@ -54,7 +53,7 @@ public class AsyncTaskService {
         if(StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>") == null) {
             //说明该漫画是单章漫画,没有区分章节,例如王者荣耀图鉴类型的https://18comic.vip/album/203961
             String url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", ">開始閱讀<"), "href=\"", "/\"");
-            String name =StrUtil.trim(StrUtil.replaceChars(StrUtil.subBetween(body, "<div itemprop=\"name\" class=\"pull-left\">\n", "\n</div>"), new char[]{'/', '\\'}, StrUtil.DASHED));
+            String name = StrUtil.trim(StrUtil.replaceChars(StrUtil.subBetween(body, "<div itemprop=\"name\" class=\"pull-left\">\n", "\n</div>"), new char[]{'/', '\\'}, StrUtil.DASHED));
             DateTime updatedAt = DateUtil.parse(StrUtil.subBetween(StrUtil.subBetween(body, "itemprop=\"datePublished\"", "上架日期"), "content=\"", "\""));
             ChapterEntity chapterEntity = new ChapterEntity();
             chapterEntity.setUrl(host + url);
@@ -96,7 +95,7 @@ public class AsyncTaskService {
         while(httpResponse == null) {
             ThreadUtil.sleep(2000L);
             try {
-                httpResponse = HttpUtil.createPost(chapterEntity.getUrl()).cookie(cookie).setHttpProxy(proxyHost, proxyPort).execute();
+                httpResponse = this.createPost(chapterEntity.getUrl()).execute();
             } catch(Exception e) {
                 log.error("getPhotoInfo->获取图片信息失败,正在重试:[{}]", e.getLocalizedMessage(), e);
             }
@@ -131,7 +130,7 @@ public class AsyncTaskService {
                 log.error("getImage->下载图片失败,正在重试:[{}]", e.getLocalizedMessage(), e);
             }
         }
-        log.info("getImage->下载图片:[{}]成功", url);
+        log.info("getImage->成功下载图片:[{}]", url);
         return new AsyncResult<>(bufferedImage);
     }
 
@@ -159,10 +158,10 @@ public class AsyncTaskService {
     }
 
     @Async
-    public void saveImage(String path, BufferedImage bufferedImage) {
+    public void saveImage(File photoFile, BufferedImage bufferedImage) {
         try {
-            ImageIO.write(bufferedImage, "jpg", FileUtil.file(path));
-            log.info("saveImage->保存图片:[{}]成功", path);
+            ImageIO.write(bufferedImage, "jpg", photoFile);
+            log.info("saveImage->成功保存图片:[{}]", photoFile.getPath());
         } catch(IOException e) {
             log.error("saveImage->{}", e.getLocalizedMessage(), e);
         }
@@ -175,9 +174,9 @@ public class AsyncTaskService {
             try {
                 ThreadUtil.sleep(2000L);
                 httpResponse = this.createPost(url).execute();
-                log.info("getImage->获取图片:[{}]成功", url);
+                log.info("getImage->成功获取图片:[{}]", url);
                 httpResponse.writeBody(photoFile);
-                log.info("saveImage->保存图片:[{}]成功", photoFile.getPath());
+                log.info("saveImage->成功保存图片:[{}]", photoFile.getPath());
             } catch(Exception e) {
                 log.error("getAndSaveImage->下载图片失败,正在重试:[{}]", e.getLocalizedMessage(), e);
             }
