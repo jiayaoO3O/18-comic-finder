@@ -178,7 +178,7 @@ public class AsyncTaskService {
                 httpResponse.writeBody(photoFile);
                 log.info("saveImage->成功保存图片:[{}]", photoFile.getPath());
             } catch(Exception e) {
-                log.error("getAndSaveImage->下载图片失败,正在重试:[{}]", e.getLocalizedMessage(), e);
+                log.error("getAndSaveImage->下载图片失败,正在重试:[{}][{}]",photoFile.getPath(), e.getLocalizedMessage(), e);
             }
         }
     }
