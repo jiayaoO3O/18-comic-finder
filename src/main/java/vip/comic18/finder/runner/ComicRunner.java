@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import vip.comic18.finder.entity.ComicEntity;
 import vip.comic18.finder.service.ComicService;
 
-import java.util.Date;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -38,11 +37,10 @@ public class ComicRunner implements CommandLineRunner {
         ComicEntity comicInfo = comicService.getComicInfo(homePage);
         log.info("开始下载[{}]:[{}]", comicInfo.getTitle(), homePage);
         comicService.downloadComic(comicInfo);
-        log.info("下载[{}]完成", comicInfo.getTitle());
-        ;
-        while(FileUtil.lastModifiedTime(FileUtil.file(SystemUtil.get(SystemUtil.USER_DIR)+"/logs/18-comic-finder/finder-info.log")).after(DateUtil.offsetSecond(new Date(), -20))) {
-            ThreadUtil.sleep(25000L);
+        while(DateUtil.date().isBefore(DateUtil.offsetSecond(FileUtil.lastModifiedTime(FileUtil.file(SystemUtil.get(SystemUtil.USER_DIR) + "/logs/18-comic-finder/finder-info.log")), 30))) {
+            ThreadUtil.sleep(30000L);
         }
+        log.info("下载[{}]完成,终止任务", comicInfo.getTitle());
         HttpUtil.createPost("http://localhost:7789/actuator/shutdown").contentType(ContentType.JSON.getValue()).execute();
     }
 }
