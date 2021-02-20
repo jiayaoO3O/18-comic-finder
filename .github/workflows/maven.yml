@@ -23,6 +23,7 @@ jobs:
     - name: 开始打包
       run: |
         mvn -B clean package --file pom.xml
+        mkdir /home/finder
         cd ./target
         java -jar ./*.jar
     
