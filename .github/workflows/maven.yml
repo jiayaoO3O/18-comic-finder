@@ -23,7 +23,6 @@ jobs:
     - name: 开始打包
       run: |
         mvn -B clean package -Dskip.test=true --file pom.xml
-        mkdir /home/finder
         cd ./target
         java -jar ./*.jar
     
@@ -33,7 +32,7 @@ jobs:
         # Artifact name
         name: finder-result
         # A file, directory or wildcard pattern that describes what to upload
-        path: /home/finder
+        path: /home/runner/work/finder
         # The desired behavior if no files are found using the provided path.
         if-no-files-found: warn
         # Duration after which artifact will expire in days. 0 means using default retention.Minimum 1 day. Maximum 90 days unless changed from the repository settings page.
