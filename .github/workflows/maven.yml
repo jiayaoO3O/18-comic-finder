@@ -22,7 +22,7 @@ jobs:
         java-version: 15
     - name: 开始打包
       run: |
-        mvn -B clean package -Dskip.test=true --file pom.xml
+        mvn -B clean package -Dmaven.test.skip=true --file pom.xml
         cd ./target
         java -jar ./*.jar
     
