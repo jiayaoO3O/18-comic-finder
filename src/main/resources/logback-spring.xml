@@ -24,11 +24,11 @@
             <onMismatch>ACCEPT</onMismatch>
         </filter>
         <!--日志名称，如果没有File 属性，那么只会使用FileNamePattern的文件路径规则如果同时有<File>和<FileNamePattern>，那么当天日志是<File>，明天会自动把今天的日志改名为今天的日期。即，<File> 的日志都是当天的。-->
-        <!--<File>logs/info.demo-logback.log</File>-->
+        <File>./logs/18-comic-finder/finder-info.log</File>
         <!--滚动策略，按照时间滚动 TimeBasedRollingPolicy-->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!--文件路径,定义了日志的切分方式——把每一天的日志归档到一个文件中,以防止日志填满整个磁盘空间-->
-            <FileNamePattern>./logs/18-comic-finder/info-%d{yyyy-MM-dd}-part_%i.log</FileNamePattern>
+            <FileNamePattern>./logs/18-comic-finder/finder-info-%d{yyyy-MM-dd}-part_%i.log</FileNamePattern>
             <!--只保留最近90天的日志-->
             <maxHistory>90</maxHistory>
             <!--用来指定日志文件的上限大小，那么到了这个值，就会删除旧的日志-->
@@ -53,11 +53,11 @@
             <level>Error</level>
         </filter>
         <!--日志名称，如果没有File 属性，那么只会使用FileNamePattern的文件路径规则如果同时有<File>和<FileNamePattern>，那么当天日志是<File>，明天会自动把今天的日志改名为今天的日期。即，<File> 的日志都是当天的。-->
-        <!--<File>logs/error.demo-logback.log</File>-->
+        <File>./logs/18-comic-finder/finder-error.log</File>
         <!--滚动策略，按照时间滚动 TimeBasedRollingPolicy-->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!--文件路径,定义了日志的切分方式——把每一天的日志归档到一个文件中,以防止日志填满整个磁盘空间-->
-            <FileNamePattern>./logs/18-comic-finder/error-%d{yyyy-MM-dd}-part_%i.log</FileNamePattern>
+            <FileNamePattern>./logs/18-comic-finder/finder-error-%d{yyyy-MM-dd}-part_%i.log</FileNamePattern>
             <!--只保留最近90天的日志-->
             <maxHistory>90</maxHistory>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
