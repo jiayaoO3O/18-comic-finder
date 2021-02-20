@@ -111,7 +111,7 @@ public class AsyncTaskService {
                 photoEntity.setUrl(StrUtil.trim(urlAndName[ 0 ]));
                 photoEntity.setName(StrUtil.trim(urlAndName[ 1 ]));
                 photoEntities.add(photoEntity);
-                log.info(StrUtil.format("chapter:[{}]-photo:[{}]-url:[{}]"), chapterEntity.getName(), photoEntity.getName(), photoEntity.getUrl());
+                //log.info(StrUtil.format("chapter:[{}]-photo:[{}]-url:[{}]"), chapterEntity.getName(), photoEntity.getName(), photoEntity.getUrl());
             }
         }
         return new AsyncResult<>(photoEntities);
