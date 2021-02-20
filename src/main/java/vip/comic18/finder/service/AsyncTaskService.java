@@ -185,7 +185,7 @@ public class AsyncTaskService {
 
     public HttpRequest createPost(String url) {
         HttpRequest post = HttpUtil.createPost(url);
-        if((proxyHost != null && proxyPort != 0)) {
+        if((proxyHost != null && proxyPort != null)) {
             post.setHttpProxy(proxyHost, proxyPort);
         }
         if(cookie != null) {
