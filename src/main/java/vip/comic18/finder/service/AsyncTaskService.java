@@ -36,7 +36,7 @@ public class AsyncTaskService {
     private String proxyHost;
 
     @Value("${comic.proxy.port}")
-    private int proxyPort;
+    private Integer proxyPort;
 
     @Value("${comic.download.cookie}")
     private String cookie;

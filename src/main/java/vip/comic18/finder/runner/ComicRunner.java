@@ -1,5 +1,6 @@
 package vip.comic18.finder.runner;
 
+import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +25,7 @@ public class ComicRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws ExecutionException, InterruptedException {
         log.info("注意身体,适度看漫");
-        if(homePage == null) {
+        if(StrUtil.isEmpty(homePage)) {
             return;
         }
         ComicEntity comicInfo = comicService.getComicInfo(homePage);
