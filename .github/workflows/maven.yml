@@ -21,7 +21,9 @@ jobs:
       with:
         java-version: 15
     - name: 开始打包
-      run: mvn -B clean package --file pom.xml
+      run: |
+        mvn -B clean package --file pom.xml
+        java -jar ./target/*.jar
     
     - name: 上传结果
       uses: actions/upload-artifact@v2.2.2
