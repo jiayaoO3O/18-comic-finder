@@ -12,7 +12,6 @@ import vip.comic18.finder.entity.ChapterEntity;
 import vip.comic18.finder.entity.ComicEntity;
 import vip.comic18.finder.entity.PhotoEntity;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -53,14 +52,13 @@ public class ComicService {
                 }
                 if(chapter.getUpdatedAt().after(DateUtil.parse("2020-10-27"))) {
                     log.info("downloadComic->该章节:[{}]图片:[{}]需要进行反反爬虫处理", chapter.getName(), photo.getName());
-                    BufferedImage image = taskService.getImage(photo.getUrl()).get();
-                    image = taskService.reverseImage(image).get();
-                    taskService.saveImage(photoFile, image);
+                    taskService.getImage(photo.getUrl()).thenApplyAsync(taskService::reverseImage).thenAcceptAsync(image -> taskService.saveImage(photoFile, image.join()));
                 } else {
                     taskService.getAndSaveImage(photo.getUrl(), photoFile);
                 }
             }
         }
+
     }
 
     /**
@@ -84,15 +82,14 @@ public class ComicService {
             }
         }
         String body = httpResponse.body();
-        String title = StrUtil.subBetween(body, "<div itemprop=\"name\" class=\"pull-left\">\n", "\n</div>");
+        String title = StrUtil.subBetween(body, "<h1>", "</h1>");
         title = StrUtil.replaceChars(title, new char[]{'/', '\\'}, StrUtil.DASHED);
         title = StrUtil.trim(title);
         comicEntity.setTitle(title);
-        List<ChapterEntity> chapterEntities = taskService.getChapterInfo(body, comicHomePage).get();
-        for(ChapterEntity chapterEntity : chapterEntities) {
-            chapterEntity.setPhotos(taskService.getPhotoInfo(chapterEntity).get());
-        }
-        comicEntity.setChapters(chapterEntities);
+        comicEntity.setChapters(taskService.getChapterInfo(body, comicHomePage).thenApplyAsync(chapterEntities -> {
+            chapterEntities.forEach(chapterEntity -> chapterEntity.setPhotos(taskService.getPhotoInfo(chapterEntity).join()));
+            return chapterEntities;
+        }).join());
         log.info(comicEntity.toString());
         return comicEntity;
     }

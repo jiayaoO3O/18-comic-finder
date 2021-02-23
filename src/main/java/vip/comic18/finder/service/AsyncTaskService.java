@@ -11,7 +11,6 @@ import cn.hutool.http.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Service;
 import vip.comic18.finder.entity.ChapterEntity;
 import vip.comic18.finder.entity.PhotoEntity;
@@ -24,7 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 
 /**
  * Created by jiayao on 2021/2/17.
@@ -48,7 +46,7 @@ public class AsyncTaskService {
      * @return 章节列表
      */
     @Async
-    public Future<List<ChapterEntity>> getChapterInfo(String body, String comicHomePage) {
+    public CompletableFuture<List<ChapterEntity>> getChapterInfo(String body, String comicHomePage) {
         List<ChapterEntity> chapterEntities = new ArrayList<>();
         String host = "https://" + StrUtil.subBetween(comicHomePage, "//", "/");
         if(StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>") == null) {
@@ -80,7 +78,7 @@ public class AsyncTaskService {
             chapterEntities.add(chapterEntity);
             log.info(chapterEntity.toString());
         }
-        return new AsyncResult<>(chapterEntities);
+        return CompletableFuture.completedFuture(chapterEntities);
     }
 
     /**
@@ -90,7 +88,7 @@ public class AsyncTaskService {
      * @return 图片列表
      */
     @Async
-    public Future<List<PhotoEntity>> getPhotoInfo(ChapterEntity chapterEntity) {
+    public CompletableFuture<List<PhotoEntity>> getPhotoInfo(ChapterEntity chapterEntity) {
         List<PhotoEntity> photoEntities = new ArrayList<>();
         HttpResponse httpResponse = null;
         while(httpResponse == null) {
@@ -115,11 +113,11 @@ public class AsyncTaskService {
                 //log.info(StrUtil.format("chapter:[{}]-photo:[{}]-url:[{}]"), chapterEntity.getName(), photoEntity.getName(), photoEntity.getUrl());
             }
         }
-        return new AsyncResult<>(photoEntities);
+        return CompletableFuture.completedFuture(photoEntities);
     }
 
     @Async
-    public Future<BufferedImage> getImage(String url) {
+    public CompletableFuture<BufferedImage> getImage(String url) {
         HttpResponse httpResponse = null;
         BufferedImage bufferedImage = null;
         while(httpResponse == null || bufferedImage == null) {
@@ -132,7 +130,7 @@ public class AsyncTaskService {
             }
         }
         log.info("getImage->成功下载图片:[{}]", url);
-        return new AsyncResult<>(bufferedImage);
+        return CompletableFuture.completedFuture(bufferedImage);
     }
 
 
@@ -145,7 +143,7 @@ public class AsyncTaskService {
      * @return 重新排序后的照片
      */
     @Async
-    public Future<BufferedImage> reverseImage(BufferedImage bufferedImage) {
+    public CompletableFuture<BufferedImage> reverseImage(BufferedImage bufferedImage) {
         int height = bufferedImage.getHeight();
         int width = bufferedImage.getWidth();
         int preImgHeight = height / 10;
@@ -155,7 +153,7 @@ public class AsyncTaskService {
             BufferedImage subimage = bufferedImage.getSubimage(0, i * preImgHeight, width, preImgHeight);
             graphics.drawImage(subimage, null, 0, height - (i + 1) * preImgHeight);
         }
-        return new AsyncResult<>(result);
+        return CompletableFuture.completedFuture(result);
     }
 
     @Async
@@ -179,9 +177,9 @@ public class AsyncTaskService {
         while(httpResponse == null || writeResult == 0L) {
             try {
                 httpResponse = this.createPost(url).execute();
-                log.info("getImage->成功获取图片:[{}]", url);
+                log.info("getAndSaveImage->成功下载图片:[{}]", url);
                 writeResult = httpResponse.writeBody(photoFile);
-                log.info("saveImage->成功保存图片:[{}]", photoFile.getPath());
+                log.info("getAndSaveImage->成功保存图片:[{}]", photoFile.getPath());
             } catch(Exception e) {
                 log.error("getAndSaveImage->下载图片失败,正在重试:[{}][{}]", photoFile.getPath(), e.getLocalizedMessage(), e);
                 ThreadUtil.sleep(2000L);
