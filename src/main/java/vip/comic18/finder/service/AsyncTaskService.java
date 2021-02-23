@@ -94,11 +94,11 @@ public class AsyncTaskService {
         List<PhotoEntity> photoEntities = new ArrayList<>();
         HttpResponse httpResponse = null;
         while(httpResponse == null) {
-            ThreadUtil.sleep(2000L);
             try {
                 httpResponse = this.createPost(chapterEntity.getUrl()).execute();
             } catch(Exception e) {
                 log.error("getPhotoInfo->获取图片信息失败,正在重试:[{}]", e.getLocalizedMessage(), e);
+                ThreadUtil.sleep(2000L);
             }
         }
         String body = httpResponse.body();
@@ -124,11 +124,11 @@ public class AsyncTaskService {
         BufferedImage bufferedImage = null;
         while(httpResponse == null || bufferedImage == null) {
             try {
-                ThreadUtil.sleep(2000L);
                 httpResponse = this.createPost(url).execute();
                 bufferedImage = ImgUtil.read(httpResponse.bodyStream());
             } catch(Exception e) {
                 log.error("getImage->下载图片失败,正在重试:[{}]", e.getLocalizedMessage(), e);
+                ThreadUtil.sleep(2000L);
             }
         }
         log.info("getImage->成功下载图片:[{}]", url);
@@ -178,13 +178,13 @@ public class AsyncTaskService {
         long writeResult = 0L;
         while(httpResponse == null || writeResult == 0L) {
             try {
-                ThreadUtil.sleep(2000L);
                 httpResponse = this.createPost(url).execute();
                 log.info("getImage->成功获取图片:[{}]", url);
                 writeResult = httpResponse.writeBody(photoFile);
                 log.info("saveImage->成功保存图片:[{}]", photoFile.getPath());
             } catch(Exception e) {
                 log.error("getAndSaveImage->下载图片失败,正在重试:[{}][{}]", photoFile.getPath(), e.getLocalizedMessage(), e);
+                ThreadUtil.sleep(2000L);
             }
         }
     }
