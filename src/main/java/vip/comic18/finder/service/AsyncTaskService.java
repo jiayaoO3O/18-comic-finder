@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 /**
@@ -61,7 +62,7 @@ public class AsyncTaskService {
             chapterEntity.setUpdatedAt(updatedAt);
             chapterEntities.add(chapterEntity);
             log.info(chapterEntity.toString());
-            return new AsyncResult<>(chapterEntities);
+            return CompletableFuture.completedFuture(chapterEntities);
         }
         body = StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>");
         String[] chapters = StrUtil.subBetweenAll(body, "<a ", "</li>");
@@ -170,15 +171,16 @@ public class AsyncTaskService {
     @Async
     public void getAndSaveImage(String url, File photoFile) {
         HttpResponse httpResponse = null;
-        while(httpResponse == null) {
+        long writeResult = 0L;
+        while(httpResponse == null || writeResult == 0L) {
             try {
                 ThreadUtil.sleep(2000L);
                 httpResponse = this.createPost(url).execute();
                 log.info("getImage->成功获取图片:[{}]", url);
-                httpResponse.writeBody(photoFile);
+                writeResult = httpResponse.writeBody(photoFile);
                 log.info("saveImage->成功保存图片:[{}]", photoFile.getPath());
             } catch(Exception e) {
-                log.error("getAndSaveImage->下载图片失败,正在重试:[{}][{}]",photoFile.getPath(), e.getLocalizedMessage(), e);
+                log.error("getAndSaveImage->下载图片失败,正在重试:[{}][{}]", photoFile.getPath(), e.getLocalizedMessage(), e);
             }
         }
     }
