@@ -160,11 +160,15 @@ public class AsyncTaskService {
 
     @Async
     public void saveImage(File photoFile, BufferedImage bufferedImage) {
-        try {
-            ImageIO.write(bufferedImage, "jpg", photoFile);
-            log.info("saveImage->成功保存图片:[{}]", photoFile.getPath());
-        } catch(IOException e) {
-            log.error("saveImage->{}", e.getLocalizedMessage(), e);
+        boolean isWrite = false;
+        while(!isWrite) {
+            try {
+                isWrite = ImageIO.write(bufferedImage, "jpg", photoFile);
+                log.info("saveImage->成功保存图片:[{}]", photoFile.getPath());
+            } catch(IOException e) {
+                log.error("saveImage->{}", e.getLocalizedMessage(), e);
+                ThreadUtil.sleep(2000L);
+            }
         }
     }
 
