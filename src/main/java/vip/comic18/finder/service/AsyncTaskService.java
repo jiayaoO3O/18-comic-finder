@@ -3,6 +3,7 @@ package vip.comic18.finder.service;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.img.ImgUtil;
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
@@ -161,10 +162,10 @@ public class AsyncTaskService {
         boolean isWrite = false;
         while(!isWrite) {
             try {
-                isWrite = ImageIO.write(bufferedImage, "jpg", photoFile);
+                isWrite = ImageIO.write(bufferedImage, "jpg", FileUtil.touch(photoFile));
                 log.info("saveImage->成功保存图片:[{}]", photoFile.getPath());
             } catch(IOException e) {
-                log.error("saveImage->{}", e.getLocalizedMessage(), e);
+                log.error("saveImage->{}", e.getMessage(), e);
                 ThreadUtil.sleep(2000L);
             }
         }
@@ -173,12 +174,12 @@ public class AsyncTaskService {
     @Async
     public void getAndSaveImage(String url, File photoFile) {
         HttpResponse httpResponse = null;
-        long writeResult = 0L;
-        while(httpResponse == null || writeResult == 0L) {
+        File writeResult = null;
+        while(httpResponse == null || writeResult == null) {
             try {
                 httpResponse = this.createPost(url).execute();
                 log.info("getAndSaveImage->成功下载图片:[{}]", url);
-                writeResult = httpResponse.writeBody(photoFile);
+                writeResult = FileUtil.writeBytes(httpResponse.bodyBytes(), photoFile);
                 log.info("getAndSaveImage->成功保存图片:[{}]", photoFile.getPath());
             } catch(Exception e) {
                 log.error("getAndSaveImage->下载图片失败,正在重试:[{}][{}]", photoFile.getPath(), e.getLocalizedMessage(), e);

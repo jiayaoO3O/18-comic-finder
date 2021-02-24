@@ -67,7 +67,7 @@ public class ComicService {
      * @param comicHomePage 漫画的主页
      * @return 漫画信息
      */
-    public ComicEntity getComicInfo(String comicHomePage) throws ExecutionException, InterruptedException {
+    public ComicEntity getComicInfo(String comicHomePage) {
         ComicEntity comicEntity = new ComicEntity();
         HttpResponse httpResponse = null;
         while(httpResponse == null) {
