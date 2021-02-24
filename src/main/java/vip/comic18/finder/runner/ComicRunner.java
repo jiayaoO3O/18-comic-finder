@@ -38,7 +38,7 @@ public class ComicRunner implements CommandLineRunner {
         log.info("开始下载[{}]:[{}]", comicInfo.getTitle(), homePage);
         comicService.downloadComic(comicInfo);
         while(DateUtil.date().isBefore(DateUtil.offsetSecond(FileUtil.lastModifiedTime(FileUtil.file(SystemUtil.get(SystemUtil.USER_DIR) + "/logs/18-comic-finder/finder-info.log")), 30))) {
-            ThreadUtil.sleep(30000L);
+            ThreadUtil.sleep(60000L);
         }
         log.info("下载[{}]完成,终止任务", comicInfo.getTitle());
         HttpUtil.createPost("http://localhost:7789/actuator/shutdown").contentType(ContentType.JSON.getValue()).execute();
