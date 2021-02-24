@@ -22,7 +22,7 @@ public class FinderApplication {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
 		taskExecutor.setCorePoolSize(2);
 		taskExecutor.setMaxPoolSize(4);
-		taskExecutor.setQueueCapacity(256);
+		taskExecutor.setQueueCapacity(64);
 		taskExecutor.setKeepAliveSeconds(60);
 		taskExecutor.setThreadNamePrefix("async-task-");
 		taskExecutor.setWaitForTasksToCompleteOnShutdown(true);
