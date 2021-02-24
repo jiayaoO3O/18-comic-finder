@@ -20,8 +20,8 @@ public class FinderApplication {
 	@Bean()
 	public Executor taskExecutor() {
 		ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-		taskExecutor.setCorePoolSize(2);
-		taskExecutor.setMaxPoolSize(8);
+		taskExecutor.setCorePoolSize(8);
+		taskExecutor.setMaxPoolSize(16);
 		taskExecutor.setQueueCapacity(512);
 		taskExecutor.setKeepAliveSeconds(120);
 		taskExecutor.setThreadNamePrefix("async-task-");
