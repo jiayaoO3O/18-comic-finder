@@ -24,7 +24,7 @@ jobs:
       run: |
         mvn -B clean package -Dmaven.test.skip=true --file pom.xml
         cd ./target
-        java -jar -XX:+UseZGC ./*.jar
+        java -jar -XX:+UseZGC -Xms512m -Xmx2g ./*.jar
     
     - name: 上传结果
       uses: actions/upload-artifact@v2.2.2
