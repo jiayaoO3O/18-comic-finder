@@ -35,7 +35,9 @@ public class ComicRunner implements CommandLineRunner {
         ClassPathResource classPathResource = new ClassPathResource("downloadPath.json");
         classPathResource.readUtf8Str();
         if(CollUtil.isEmpty(comicHomePages)) {
+            log.info("下载列表为空,终止任务");
             HttpUtil.createPost("http://localhost:7789/actuator/shutdown").contentType(ContentType.JSON.getValue()).execute();
+            return;
         }
         comicHomePages.forEach(comicHomePage -> {
             ComicEntity comicInfo = comicService.getComicInfo(comicHomePage);
