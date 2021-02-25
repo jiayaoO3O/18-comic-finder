@@ -5,7 +5,6 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.resource.ClassPathResource;
 import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.http.ContentType;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
@@ -17,8 +16,6 @@ import org.springframework.stereotype.Component;
 import vip.comic18.finder.entity.ComicEntity;
 import vip.comic18.finder.service.ComicService;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -30,14 +27,13 @@ public class ComicRunner implements CommandLineRunner {
     @Autowired
     private ComicService comicService;
 
-    private final List<String> comicHomePages = JSONUtil.readJSONArray(FileUtil.writeBytes(new ClassPathResource("downloadPath.json").readBytes(), File.createTempFile("downloadPath", ".json")), CharsetUtil.CHARSET_UTF_8).toList(String.class);
-
-    public ComicRunner() throws IOException {
-    }
+    private final List<String> comicHomePages = JSONUtil.toList(new ClassPathResource("downloadPath.json").readUtf8Str(), String.class);
 
     @Override
     public void run(String... args) {
         log.info("注意身体,适度看漫");
+        ClassPathResource classPathResource = new ClassPathResource("downloadPath.json");
+        classPathResource.readUtf8Str();
         if(CollUtil.isEmpty(comicHomePages)) {
             HttpUtil.createPost("http://localhost:7789/actuator/shutdown").contentType(ContentType.JSON.getValue()).execute();
         }

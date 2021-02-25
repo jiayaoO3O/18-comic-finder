@@ -90,6 +90,7 @@ public class AsyncTaskService {
      */
     @Async
     public CompletableFuture<List<PhotoEntity>> getPhotoInfo(ChapterEntity chapterEntity) {
+        ThreadUtil.sleep(1000L);
         List<PhotoEntity> photoEntities = new ArrayList<>();
         HttpResponse httpResponse = null;
         while(httpResponse == null) {
@@ -119,6 +120,7 @@ public class AsyncTaskService {
 
     @Async
     public CompletableFuture<BufferedImage> getImage(String url) {
+        ThreadUtil.sleep(1000L);
         HttpResponse httpResponse = null;
         BufferedImage bufferedImage = null;
         while(httpResponse == null || bufferedImage == null) {
@@ -173,6 +175,7 @@ public class AsyncTaskService {
 
     @Async
     public void getAndSaveImage(String url, File photoFile) {
+        ThreadUtil.sleep(1000L);
         HttpResponse httpResponse = null;
         File writeResult = null;
         while(httpResponse == null || writeResult == null) {
