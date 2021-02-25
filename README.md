@@ -51,11 +51,11 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 
     ![image.png](https://i.loli.net/2021/02/25/O745iyUbfZvBDSN.png)
 
-4. 提交完成之后进入Actions页面查看程序运行状况 :![image-20210225153743083](C:\Users\jiayao\AppData\Roaming\Typora\typora-user-images\image-20210225153743083.png)
+4. 提交完成之后进入Actions页面查看程序运行状况 :![image.png](https://i.loli.net/2021/02/25/2h4n9q1LuFKCeB6.png)
 
-   ![image-20210225153846062](C:\Users\jiayao\AppData\Roaming\Typora\typora-user-images\image-20210225153846062.png)
+   ![image.png](https://i.loli.net/2021/02/25/BgwedXxFGtThRC9.png)
 
-   绿色说明运行成功, 黄色说明正在运行, 红色说明运行失败. 运行成功之后, 点击对应的任务 :![image-20210225154035063](C:\Users\jiayao\AppData\Roaming\Typora\typora-user-images\image-20210225154035063.png)
+   绿色说明运行成功, 黄色说明正在运行, 红色说明运行失败. 运行成功之后, 点击对应的任务 : ![image.png](https://i.loli.net/2021/02/25/gFdOoTW4vtrU9zS.png)
 
    点击箭头所指的**finder-result**文件, 即可下载已经打包好的爬虫图片, 注意这里下载github文件取决于你访问github的速度, 如果没有科学上网可能需要下载很久.
 
@@ -88,7 +88,7 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 
 ### 前台模式
 
-前台模式是指程序完成下载任务之后会自动关闭, 通过读取downloadPath.json文件内的链接来进行下载, 每一次下载都要运行一次程序.
+前台模式是指程序完成下载任务之后会自动关闭, 通过读取**downloadPath.json**文件内的链接来进行下载, 每一次下载都要运行一次程序.
 
 进入`/src/main/resources/downloadPath.json`目录, 按照json格式填入漫画链接, 如果要下载一本, 那格式为 :
 
