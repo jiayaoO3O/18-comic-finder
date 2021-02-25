@@ -14,7 +14,6 @@ import vip.comic18.finder.entity.PhotoEntity;
 
 import java.io.File;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Created by jiayao on 2021/2/16.
@@ -35,7 +34,7 @@ public class ComicService {
      *
      * @param comicEntity 漫画信息
      */
-    public void downloadComic(ComicEntity comicEntity) throws ExecutionException, InterruptedException {
+    public void downloadComic(ComicEntity comicEntity) {
         String title = comicEntity.getTitle();
         if(downloadPath == null) {
             log.error("downloadComic->下载路径downloadPath错误,无法下载文件,请确保配置文件中下载路径正确");
