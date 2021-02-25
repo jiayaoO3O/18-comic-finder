@@ -5,6 +5,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.resource.ClassPathResource;
 import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.http.ContentType;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
@@ -32,6 +33,11 @@ public class ComicRunner implements CommandLineRunner {
     @Override
     public void run(String... args) {
         log.info("注意身体,适度看漫");
+        if(ArrayUtil.contains(args, "-s")) {
+            log.info("运行模式 : 后台模式");
+            return;
+        }
+        log.info("运行模式 : 前台模式");
         ClassPathResource classPathResource = new ClassPathResource("downloadPath.json");
         classPathResource.readUtf8Str();
         if(CollUtil.isEmpty(comicHomePages)) {
