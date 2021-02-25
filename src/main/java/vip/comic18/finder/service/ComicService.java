@@ -89,7 +89,6 @@ public class ComicService {
             chapterEntities.forEach(chapterEntity -> chapterEntity.setPhotos(taskService.getPhotoInfo(chapterEntity).join()));
             return chapterEntities;
         }).join());
-        log.info(comicEntity.toString());
         return comicEntity;
     }
 }
