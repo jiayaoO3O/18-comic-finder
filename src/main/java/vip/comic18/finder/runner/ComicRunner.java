@@ -3,7 +3,9 @@ package vip.comic18.finder.runner;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.resource.ClassPathResource;
 import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.http.ContentType;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
@@ -15,7 +17,8 @@ import org.springframework.stereotype.Component;
 import vip.comic18.finder.entity.ComicEntity;
 import vip.comic18.finder.service.ComicService;
 
-import java.nio.charset.Charset;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -27,8 +30,10 @@ public class ComicRunner implements CommandLineRunner {
     @Autowired
     private ComicService comicService;
 
-    private List<String> comicHomePages = JSONUtil.readJSONArray(FileUtil.file("downloadPath.json"), Charset.defaultCharset()).toList(String.class);
+    private final List<String> comicHomePages = JSONUtil.readJSONArray(FileUtil.writeBytes(new ClassPathResource("downloadPath.json").readBytes(), File.createTempFile("downloadPath", ".json")), CharsetUtil.CHARSET_UTF_8).toList(String.class);
 
+    public ComicRunner() throws IOException {
+    }
 
     @Override
     public void run(String... args) {
@@ -40,6 +45,7 @@ public class ComicRunner implements CommandLineRunner {
             ComicEntity comicInfo = comicService.getComicInfo(comicHomePage);
             log.info("开始下载[{}]:[{}]", comicInfo.getTitle(), comicHomePage);
             comicService.downloadComic(comicInfo);
+            log.info("完成下载[{}]:[{}]", comicInfo.getTitle(), comicHomePage);
         });
         while(DateUtil.date().isBefore(DateUtil.offsetSecond(FileUtil.lastModifiedTime(FileUtil.file(SystemUtil.get(SystemUtil.USER_DIR) + "/logs/18-comic-finder/finder-info.log")), 30))) {
             ThreadUtil.sleep(60000L);
