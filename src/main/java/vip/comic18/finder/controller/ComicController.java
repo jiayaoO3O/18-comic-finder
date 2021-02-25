@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 import vip.comic18.finder.entity.ComicEntity;
 import vip.comic18.finder.service.ComicService;
 
-import java.util.concurrent.ExecutionException;
-
 /**
  * Created by jiayao on 2021/2/16.
  */
@@ -22,7 +20,7 @@ public class ComicController {
     private ComicService comicService;
 
     @GetMapping("/download")
-    public String download(@RequestParam("homePage") String homePage) throws ExecutionException, InterruptedException {
+    public String download(@RequestParam("homePage") String homePage) {
         if(homePage == null) {
             log.error("download->homePage为空");
             return "homePage为空";
