@@ -1,14 +1,30 @@
 package vip.comic18.finder.entity;
 
-import lombok.Data;
-
-import java.io.Serializable;
-
 /**
- * Created by jiayao on 2021/2/16.
+ * Created by jiayao on 2021/3/23.
  */
-@Data
-public class PhotoEntity implements Serializable {
+public class PhotoEntity {
     private String name;
     private String url;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    @Override
+    public String toString() {
+        return "PhotoEntity{" + "name='" + name + '\'' + ", url='" + url + '\'' + '}';
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
 }

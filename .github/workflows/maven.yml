@@ -16,10 +16,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: 初始化JDK15
+    - name: 初始化JDK16
       uses: actions/setup-java@v1
       with:
-        java-version: 15
+        java-version: 16
     - name: 开始打包
       run: |
         mvn -B clean package -Dmaven.test.skip=true --file pom.xml

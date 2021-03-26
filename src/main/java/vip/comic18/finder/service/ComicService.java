@@ -1,94 +1,87 @@
 package vip.comic18.finder.service;
 
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import vip.comic18.finder.entity.ChapterEntity;
-import vip.comic18.finder.entity.ComicEntity;
-import vip.comic18.finder.entity.PhotoEntity;
+import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.core.Vertx;
+import io.vertx.mutiny.ext.web.client.HttpResponse;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.io.File;
-import java.util.List;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 
 /**
- * Created by jiayao on 2021/2/16.
+ * Created by jiayao on 2021/3/23.
  */
-@Service
-@Slf4j
+@ApplicationScoped
 public class ComicService {
-    @Autowired
-    private AsyncTaskService taskService;
+    @ConfigProperty(name = "comic.download.path")
+    String downloadPath;
 
-    @Value("${comic.download.path}")
-    private String downloadPath;
+    @ConfigProperty(name = "quarkus.log.handler.file.\"INFO_LOG\".path")
+    String logPath;
 
+    @Inject
+    Logger log;
 
-    /**
-     * 下载漫画到本地
-     * 漫画会在下载路径下按照漫画名-章节名-图片名归类
-     *
-     * @param comicEntity 漫画信息
-     */
-    public void downloadComic(ComicEntity comicEntity) {
-        String title = comicEntity.getTitle();
-        if(downloadPath == null) {
-            log.error("downloadComic->下载路径downloadPath错误,无法下载文件,请确保配置文件中下载路径正确");
-            return;
-        }
-        for(ChapterEntity chapter : comicEntity.getChapters()) {
-            List<PhotoEntity> photos = chapter.getPhotos();
-            for(PhotoEntity photo : photos) {
-                String photoPath = downloadPath + File.separatorChar + title + File.separatorChar + chapter.getName() + File.separatorChar + photo.getName();
-                File photoFile = FileUtil.file(photoPath);
-                if(photoFile.exists()) {
-                    log.info("downloadComic->图片已下载,跳过[{}]", photoFile.getPath());
-                    continue;
-                }
-                if(chapter.getUpdatedAt().after(DateUtil.parse("2020-10-27"))) {
-                    log.info("downloadComic->该章节:[{}]图片:[{}]需要进行反反爬虫处理", chapter.getName(), photo.getName());
-                    taskService.getImage(photo.getUrl()).thenApplyAsync(taskService::reverseImage).thenAcceptAsync(image -> taskService.saveImage(photoFile, image.join()));
-                } else {
-                    taskService.getAndSaveImage(photo.getUrl(), photoFile);
-                }
-            }
-        }
+    @Inject
+    TaskService taskService;
 
+    @Inject
+    Vertx vertx;
+
+    public void consume(String comicHomePage, String body) {
+        String title = taskService.getTitle(body);
+        var chapterEntities = taskService.getChapterInfo(body, comicHomePage);
+        chapterEntities.subscribe().with(chapterEntity -> {
+            var photoEntities = taskService.getPhotoInfo(chapterEntity);
+            photoEntities.subscribe().with(photo -> {
+                String dirPath = downloadPath + File.separatorChar + title + File.separatorChar + chapterEntity.getName();
+                String photoPath = dirPath + File.separatorChar + photo.getName();
+                vertx.fileSystem().exists(photoPath).subscribe().with(exists -> {
+                    if(exists) {
+                        log.info(StrUtil.format("downloadComic->图片已下载,跳过:[{}]", photo));
+                    } else {
+                        vertx.fileSystem().mkdirs(dirPath).onFailure().invoke(e -> log.error(StrUtil.format("downloadComic->创建文件夹失败:[{}]", e.getLocalizedMessage()), e)).subscribe().with(mkdirSucceed -> {
+                            if(chapterEntity.getUpdatedAt().after(DateUtil.parse("2020-10-27"))) {
+                                log.info(StrUtil.format("downloadComic->该章节:[{}]图片:[{}]需要进行反反爬虫处理", chapterEntity.getName(), photo.getName()));
+                                var bufferUni = taskService.post(photo.getUrl()).onItem().transform(HttpResponse::body);
+                                var tempFile = taskService.getTempFile(bufferUni);
+                                taskService.process(photoPath, tempFile);
+                            } else {
+                                taskService.getAndSaveImage(photo.getUrl(), photoPath);
+                            }
+                        });
+                    }
+                });
+            });
+        });
     }
 
-    /**
-     * 获取整本漫画的所有信息
-     *
-     * @param comicHomePage 漫画的主页
-     * @return 漫画信息
-     */
-    public ComicEntity getComicInfo(String comicHomePage) {
-        ComicEntity comicEntity = new ComicEntity();
-        HttpResponse httpResponse = null;
-        while(httpResponse == null) {
-            try {
-                if(StrUtil.contains(comicHomePage, "photo")) {
-                    httpResponse = taskService.createPost(StrUtil.replace(comicHomePage, "photo", "album")).setFollowRedirects(true).execute();
-                } else {
-                    httpResponse = taskService.createPost(comicHomePage).execute();
-                }
-            } catch(Exception e) {
-                log.error("getComicInfo->漫画首页信息失败,正在重试:[{}]", e.getLocalizedMessage(), e);
-            }
-        }
-        String body = httpResponse.body();
-        String title = StrUtil.subBetween(body, "<h1>", "</h1>");
-        title = StrUtil.replaceChars(title, new char[]{'/', '\\'}, StrUtil.DASHED);
-        title = StrUtil.trim(title);
-        comicEntity.setTitle(title);
-        comicEntity.setChapters(taskService.getChapterInfo(body, comicHomePage).thenApplyAsync(chapterEntities -> {
-            chapterEntities.forEach(chapterEntity -> chapterEntity.setPhotos(taskService.getPhotoInfo(chapterEntity).join()));
-            return chapterEntities;
-        }).join());
-        return comicEntity;
+
+    public Uni<String> getComicInfo(String comicHomePage) {
+        comicHomePage = StrUtil.contains(comicHomePage, "photo") ? StrUtil.replace(comicHomePage, "photo", "album") : comicHomePage;
+        var homePageUni = taskService.post(comicHomePage);
+        return homePageUni.onItem().transform(HttpResponse::bodyAsString);
     }
+
+    public boolean exit() {
+        var path = Path.of(logPath);
+        var compareTo = 0;
+        try {
+            var lastModifiedTime = Files.getLastModifiedTime(path);
+            compareTo = lastModifiedTime.compareTo(FileTime.from(DateUtil.toInstant(DateUtil.offsetSecond(DateUtil.date(), -30))));
+        } catch(IOException e) {
+            log.error(StrUtil.format("exit->读取日志错误:[{}]", e.getLocalizedMessage()), e);
+        }
+        return compareTo < 0;
+    }
+
+
 }
