@@ -76,7 +76,7 @@ public class ComicService {
         var compareTo = 0;
         try {
             var lastModifiedTime = Files.getLastModifiedTime(path);
-            compareTo = lastModifiedTime.compareTo(FileTime.from(DateUtil.toInstant(DateUtil.offsetSecond(DateUtil.date(), -30))));
+            compareTo = lastModifiedTime.compareTo(FileTime.from(DateUtil.toInstant(DateUtil.offsetSecond(DateUtil.date(), -10))));
         } catch(IOException e) {
             log.error(StrUtil.format("exit->读取日志错误:[{}]", e.getLocalizedMessage()), e);
         }
