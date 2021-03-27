@@ -101,7 +101,7 @@ public class TaskService {
     }
 
     public void process(String photoPath, Uni<String> tempFile) {
-        tempFile.onItem().delayIt().by(Duration.ofMillis(100)).subscribe().with(tempFilePath -> {
+        tempFile.subscribe().with(tempFilePath -> {
             BufferedImage bufferedImage = null;
             try(var inputStream = Files.newInputStream(Path.of(tempFilePath))) {
                 bufferedImage = ImageIO.read(inputStream);
