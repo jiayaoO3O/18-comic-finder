@@ -46,12 +46,20 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
     ]
     ```
 
-    注意尽量不要添加太多漫画, 否则下载起来时间要很久, 压缩包也会很大.
+    注意尽量不要添加太多漫画, 否则下载起来时间要很久, 压缩包也会很大, 并且添加的链接要是直接能访问到禁漫天堂的网站, 而不是各种镜像站, 根据禁漫天堂的公告板提示, 你所添加的漫画域名应该是以下几个网站 :
 
-    添加完成之后, 点击下方提交按钮 :
-
-    ![image.png](https://i.loli.net/2021/02/25/O745iyUbfZvBDSN.png)
-
+   > [https://18comic.vip](https://18comic.vip/)
+>
+   > [https://18comic.org](https://18comic.org/)
+>
+    > [https://18comic1.one](https://18comic1.one/)
+    >
+    > [https://18comic2.one](https://18comic2.one/)
+    
+     添加完成之后, 点击下方提交按钮 :
+    
+     ![image.png](https://i.loli.net/2021/02/25/O745iyUbfZvBDSN.png)
+    
 4. 提交完成之后进入Actions页面查看程序运行状况 :![image.png](https://i.loli.net/2021/02/25/2h4n9q1LuFKCeB6.png)
 
    ![image.png](https://i.loli.net/2021/02/25/BgwedXxFGtThRC9.png)
