@@ -3,6 +3,7 @@ package vip.comic18.finder.service;
 import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
+import io.smallrye.mutiny.tuples.Tuple2;
 import vip.comic18.finder.entity.ChapterEntity;
 import vip.comic18.finder.entity.PhotoEntity;
 import io.smallrye.common.constraint.NotNull;
@@ -100,30 +101,27 @@ public class TaskService {
         });
     }
 
-    public void process(String photoPath, Uni<String> tempFile) {
-        tempFile.subscribe().with(tempFilePath -> {
+    public void process(String photoPath, Uni<Tuple2<String, Buffer>> tempFileTuple) {
+        tempFileTuple.subscribe().with(tuple2 -> this.write(tuple2.getItem1(), tuple2.getItem2()).subscribe().with(succeed -> {
+            log.info(StrUtil.format("写入buffer到临时文件:[{}]成功", tuple2.getItem1()));
             BufferedImage bufferedImage = null;
-            try(var inputStream = Files.newInputStream(Path.of(tempFilePath))) {
+            try(var inputStream = Files.newInputStream(Path.of(tuple2.getItem1()))) {
                 bufferedImage = ImageIO.read(inputStream);
                 if(bufferedImage == null) {
-                    log.error(StrUtil.format("捕获到bufferedImage为空:[{}],图片路径:[{}]", tempFilePath, photoPath));
+                    log.error(StrUtil.format("捕获到bufferedImage为空:[{}],图片路径:[{}]", tuple2.getItem1(), photoPath));
                 } else {
                     this.write(photoPath, this.reverseImage(bufferedImage));
                 }
             } catch(IOException e) {
                 log.error(StrUtil.format("getImage->创建newInputStream失败:[{}]", e.getLocalizedMessage()), e);
             }
-            this.delete(tempFilePath);
-        });
+            this.delete(tuple2.getItem1());
+        }));
     }
 
-    public Uni<String> getTempFile(Uni<Buffer> bufferUni) {
+    public Uni<Tuple2<String, Buffer>> getTempFile(Uni<Buffer> bufferUni) {
         var tempFile = this.createTempFile();
-        return Uni.combine().all().unis(tempFile, bufferUni).combinedWith((tempFilePath, buffer) -> {
-            log.info(StrUtil.format("创建临时文件路径为->[{}]", tempFilePath));
-            this.write(tempFilePath, buffer).subscribe().with(succeed -> log.info(StrUtil.format("写入buffer到临时文件:[{}]成功", tempFilePath)));
-            return tempFilePath;
-        });
+        return Uni.combine().all().unis(tempFile, bufferUni).asTuple();
     }
 
     /**
