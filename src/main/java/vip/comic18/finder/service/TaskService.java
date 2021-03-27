@@ -50,7 +50,7 @@ public class TaskService {
         if(StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>") == null) {
             //说明该漫画是单章漫画,没有区分章节,例如王者荣耀图鉴类型的https://18comic.vip/album/203961
             String url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", ">開始閱讀<"), "href=\"", "/\"");
-            String name = StrUtil.trim(StrUtil.replaceChars(StrUtil.subBetween(body, "<div itemprop=\"name\" class=\"pull-left\">\n", "\n</div>"), new char[]{'/', '\\'}, StrUtil.DASHED));
+            String name = StrUtil.trim(StrUtil.replaceChars(StrUtil.subBetween(body, "<h1>", "</h1>"), new char[]{'/', '\\'}, StrUtil.DASHED));
             log.info(StrUtil.format("章节名称为:[{]]", name));
             DateTime updatedAt = DateUtil.parse(StrUtil.subBetween(StrUtil.subBetween(body, "itemprop=\"datePublished\"", "上架日期"), "content=\"", "\""));
             ChapterEntity chapterEntity = new ChapterEntity();
@@ -81,7 +81,7 @@ public class TaskService {
     }
 
     public Multi<PhotoEntity> getPhotoInfo(ChapterEntity chapterEntity) {
-        return this.post(chapterEntity.getUrl()).onItem().transformToMulti(response -> {
+        return this.get(chapterEntity.getUrl()).onItem().transformToMulti(response -> {
             List<PhotoEntity> photoEntities = new ArrayList<>();
             String body = response.bodyAsString();
             body = StrUtil.subBetween(body, "<div class=\"row thumb-overlay-albums\" style=\"\">", "<div class=\"tab-content");
@@ -143,14 +143,14 @@ public class TaskService {
     }
 
     public void getAndSaveImage(String url, String photoPath) {
-        this.post(url).subscribe().with(response -> {
+        this.get(url).subscribe().with(response -> {
             log.info(StrUtil.format("getAndSaveImage->成功下载图片:[{}]", url));
             this.write(photoPath, response.body()).subscribe().with(succeed -> log.info(StrUtil.format("getAndSaveImage->保存文件成功:[{}]", photoPath)));
         });
     }
 
-    public Uni<HttpResponse<Buffer>> post(String url) {
-        return webClient.postAbs(url).port(443).followRedirects(true).send().onFailure().retry().withBackOff(Duration.ofSeconds(1L), Duration.ofSeconds(3L)).atMost(10).onFailure().invoke(e -> log.error(StrUtil.format("网络请求:[{}]失败:[{}]", url, e.getLocalizedMessage()), e));
+    public Uni<HttpResponse<Buffer>> get(String url) {
+        return webClient.getAbs(url).port(443).followRedirects(true).send().onFailure().retry().withBackOff(Duration.ofSeconds(1L), Duration.ofSeconds(3L)).atMost(10).onFailure().invoke(e -> log.error(StrUtil.format("网络请求:[{}]失败:[{}]", url, e.getLocalizedMessage()), e));
     }
 
     public Uni<Void> write(String path, Buffer buffer) {

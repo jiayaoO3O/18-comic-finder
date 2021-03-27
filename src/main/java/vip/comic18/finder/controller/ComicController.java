@@ -38,6 +38,6 @@ public class ComicController {
             return Uni.createFrom().item(StrUtil.format("homePage参数:[{}]并非http或https链接", homePage));
         }
         comicService.getComicInfo(homePage).subscribe().with(body -> comicService.consume(homePage, body));
-        return Uni.createFrom().item("下载完成");
+        return Uni.createFrom().item(StrUtil.format("已经添加任务:[{}]", homePage));
     }
 }

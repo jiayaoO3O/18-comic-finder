@@ -51,7 +51,7 @@ public class ComicService {
                         vertx.fileSystem().mkdirs(dirPath).onFailure().invoke(e -> log.error(StrUtil.format("downloadComic->创建文件夹失败:[{}]", e.getLocalizedMessage()), e)).subscribe().with(mkdirSucceed -> {
                             if(chapterEntity.getUpdatedAt().after(DateUtil.parse("2020-10-27"))) {
                                 log.info(StrUtil.format("downloadComic->该章节:[{}]图片:[{}]需要进行反反爬虫处理", chapterEntity.getName(), photo.getName()));
-                                var bufferUni = taskService.post(photo.getUrl()).onItem().transform(HttpResponse::body);
+                                var bufferUni = taskService.get(photo.getUrl()).onItem().transform(HttpResponse::body);
                                 var tempFile = taskService.getTempFile(bufferUni);
                                 taskService.process(photoPath, tempFile);
                             } else {
@@ -67,7 +67,7 @@ public class ComicService {
 
     public Uni<String> getComicInfo(String comicHomePage) {
         comicHomePage = StrUtil.contains(comicHomePage, "photo") ? StrUtil.replace(comicHomePage, "photo", "album") : comicHomePage;
-        var homePageUni = taskService.post(comicHomePage);
+        var homePageUni = taskService.get(comicHomePage);
         return homePageUni.onItem().transform(HttpResponse::bodyAsString);
     }
 
