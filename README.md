@@ -82,7 +82,7 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
     - comic.proxy.port : 科学上网的端口
 
 ```properties
-   comic.download.path=C:\\Users\\jiayao\\Pictures
+comic.download.path=C:\\Users\\jiayao\\Pictures
 comic.proxy.host=127.0.0.1
 comic.proxy.port=10808
    ```
