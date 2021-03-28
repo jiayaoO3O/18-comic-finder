@@ -37,25 +37,25 @@ public class ComicService {
     Vertx vertx;
 
     public void consume(String comicHomePage, String body) {
-        String title = taskService.getTitle(body);
+        var title = taskService.getTitle(body);
         var chapterEntities = taskService.getChapterInfo(body, comicHomePage);
         chapterEntities.subscribe().with(chapterEntity -> {
             var photoEntities = taskService.getPhotoInfo(chapterEntity);
-            photoEntities.subscribe().with(photo -> {
-                String dirPath = downloadPath + File.separatorChar + title + File.separatorChar + chapterEntity.getName();
-                String photoPath = dirPath + File.separatorChar + photo.getName();
+            photoEntities.subscribe().with(photoEntity -> {
+                var dirPath = downloadPath + File.separatorChar + title + File.separatorChar + chapterEntity.name();
+                var photoPath = dirPath + File.separatorChar + photoEntity.name();
                 vertx.fileSystem().exists(photoPath).subscribe().with(exists -> {
                     if(exists) {
-                        log.info(StrUtil.format("downloadComic->图片已下载,跳过:[{}]", photo));
+                        log.info(StrUtil.format("downloadComic->图片已下载,跳过:[{}]", photoEntity));
                     } else {
                         vertx.fileSystem().mkdirs(dirPath).onFailure().invoke(e -> log.error(StrUtil.format("downloadComic->创建文件夹失败:[{}]", e.getLocalizedMessage()), e)).subscribe().with(mkdirSucceed -> {
-                            if(chapterEntity.getUpdatedAt().after(DateUtil.parse("2020-10-27"))) {
-                                log.info(StrUtil.format("downloadComic->该章节:[{}]图片:[{}]需要进行反反爬虫处理", chapterEntity.getName(), photo.getName()));
-                                var bufferUni = taskService.get(photo.getUrl()).onItem().transform(HttpResponse::body);
+                            if(chapterEntity.updatedAt().after(DateUtil.parse("2020-10-27"))) {
+                                log.info(StrUtil.format("downloadComic->该章节:[{}]图片:[{}]需要进行反反爬虫处理", chapterEntity.name(), photoEntity.name()));
+                                var bufferUni = taskService.get(photoEntity.url()).onItem().transform(HttpResponse::body);
                                 var tempFile = taskService.getTempFile(bufferUni);
                                 taskService.process(photoPath, tempFile);
                             } else {
-                                taskService.getAndSaveImage(photo.getUrl(), photoPath);
+                                taskService.getAndSaveImage(photoEntity.url(), photoPath);
                             }
                         });
                     }

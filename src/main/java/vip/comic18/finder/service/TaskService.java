@@ -1,19 +1,18 @@
 package vip.comic18.finder.service;
 
-import cn.hutool.core.date.DateTime;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
-import io.smallrye.mutiny.tuples.Tuple2;
-import vip.comic18.finder.entity.ChapterEntity;
-import vip.comic18.finder.entity.PhotoEntity;
 import io.smallrye.common.constraint.NotNull;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
 import org.jboss.logging.Logger;
+import vip.comic18.finder.entity.ChapterEntity;
+import vip.comic18.finder.entity.PhotoEntity;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.imageio.ImageIO;
@@ -26,7 +25,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by jiayao on 2021/3/23.
@@ -45,35 +43,31 @@ public class TaskService {
     WebClient webClient;
 
     public Multi<ChapterEntity> getChapterInfo(String body, String comicHomePage) {
-        List<ChapterEntity> chapterEntities = new ArrayList<>();
-        String host = "https://" + StrUtil.subBetween(comicHomePage, "//", "/");
+        var chapterEntities = new ArrayList<ChapterEntity>();
+        var host = "https://" + StrUtil.subBetween(comicHomePage, "//", "/");
         if(StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>") == null) {
             //说明该漫画是单章漫画,没有区分章节,例如王者荣耀图鉴类型的https://18comic.vip/album/203961
-            String url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", ">開始閱讀<"), "href=\"", "/\"");
-            String name = StrUtil.trim(StrUtil.replaceChars(StrUtil.subBetween(body, "<h1>", "</h1>"), new char[]{'/', '\\'}, StrUtil.DASHED));
-            log.info(StrUtil.format("章节名称为:[{]]", name));
-            DateTime updatedAt = DateUtil.parse(StrUtil.subBetween(StrUtil.subBetween(body, "itemprop=\"datePublished\"", "上架日期"), "content=\"", "\""));
-            ChapterEntity chapterEntity = new ChapterEntity();
-            chapterEntity.setUrl(host + url);
-            chapterEntity.setName(name);
-            chapterEntity.setUpdatedAt(updatedAt);
+            var url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", ">開始閱讀<"), "href=\"", "/\"");
+            var name = StrUtil.removeAny(StrUtil.splitTrim(StrUtil.replaceChars(StrUtil.subBetween(body, "<h1>", "</h1>"), new char[]{'/', '\\'}, StrUtil.DASHED), " ").toString(), "[", "]", ",");
+            var updatedAt = DateUtil.parse(StrUtil.subBetween(StrUtil.subBetween(body, "itemprop=\"datePublished\"", "上架日期"), "content=\"", "\""));
+            var chapterEntity = new ChapterEntity(name, host + url, updatedAt);
             chapterEntities.add(chapterEntity);
             log.info(chapterEntity.toString());
             return Multi.createFrom().iterable(chapterEntities);
         }
         body = StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>");
-        String[] chapters = StrUtil.subBetweenAll(body, "<a ", "</li>");
-        for(String chapter : chapters) {
-            if(comicHomePage.contains("photo") && !comicHomePage.equals(host + StrUtil.subBetween(chapter, "href=\"", "\""))) {
+        var chapters = StrUtil.subBetweenAll(body, "<a ", "</li>");
+        for(var chapter : chapters) {
+            var url = StrUtil.subBetween(chapter, "href=\"", "\"");
+            if(comicHomePage.contains("photo") && !comicHomePage.equals(host + url)) {
                 continue;
             }
-            ChapterEntity chapterEntity = new ChapterEntity();
-            chapterEntity.setUrl(host + StrUtil.subBetween(chapter, "href=\"", "\""));
             chapter = StrUtil.removeAll(chapter, '\n', '\r');
             chapter = StrUtil.subAfter(chapter, "<li", false);
-            String[] nameAndDate = StrUtil.subBetweenAll(chapter, ">", "<");
-            chapterEntity.setName(StrUtil.trim(StrUtil.replaceChars(nameAndDate[ 0 ], new char[]{'/', '\\'}, StrUtil.DASHED)));
-            chapterEntity.setUpdatedAt(DateUtil.parse(nameAndDate[ nameAndDate.length - 1 ]));
+            var nameAndDate = StrUtil.subBetweenAll(chapter, ">", "<");
+            var name = StrUtil.removeAny(StrUtil.splitTrim(StrUtil.replaceChars(nameAndDate[ 0 ], new char[]{'/', '\\'}, StrUtil.DASHED), " ").toString(), "[", "]", ",");
+            var updatedAt = DateUtil.parse(nameAndDate[ nameAndDate.length - 1 ]);
+            var chapterEntity = new ChapterEntity(name, host + url, updatedAt);
             chapterEntities.add(chapterEntity);
             log.info(chapterEntity.toString());
         }
@@ -81,20 +75,18 @@ public class TaskService {
     }
 
     public Multi<PhotoEntity> getPhotoInfo(ChapterEntity chapterEntity) {
-        return this.get(chapterEntity.getUrl()).onItem().transformToMulti(response -> {
-            List<PhotoEntity> photoEntities = new ArrayList<>();
-            String body = response.bodyAsString();
+        return this.get(chapterEntity.url()).onItem().transformToMulti(response -> {
+            var photoEntities = new ArrayList<PhotoEntity>();
+            var body = response.bodyAsString();
             body = StrUtil.subBetween(body, "<div class=\"row thumb-overlay-albums\" style=\"\">", "<div class=\"tab-content");
-            String[] photos = StrUtil.subBetweenAll(body, "data-original=\"", "\" class=");
-            for(String photo : photos) {
+            var photos = StrUtil.subBetweenAll(body, "data-original=\"", "\" class=");
+            for(var photo : photos) {
                 if(StrUtil.contains(photo, ".jpg")) {
                     photo = StrUtil.removeAll(photo, " id=\"");
-                    String[] urlAndName = StrUtil.split(photo, "\"");
-                    PhotoEntity photoEntity = new PhotoEntity();
-                    photoEntity.setUrl(StrUtil.trim(urlAndName[ 0 ]));
-                    photoEntity.setName(StrUtil.trim(urlAndName[ 1 ]));
+                    var urlAndName = StrUtil.split(photo, "\"");
+                    var photoEntity = new PhotoEntity(StrUtil.trim(urlAndName[ 1 ]), StrUtil.trim(urlAndName[ 0 ]));
                     photoEntities.add(photoEntity);
-                    log.info(StrUtil.format("chapter:[{}]-photo:[{}]-url:[{}]", chapterEntity.getName(), photoEntity.getName(), photoEntity.getUrl()));
+                    log.info(StrUtil.format("chapter:[{}]-photo:[{}]-url:[{}]", chapterEntity.name(), photoEntity.name(), photoEntity.url()));
                 }
             }
             return Multi.createFrom().iterable(photoEntities);
