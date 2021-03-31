@@ -6,6 +6,8 @@ java这门语言能让小项目变成中项目, 中项目变成大项目 🤡
 
 没什么牛逼的地方, 就是春节假期图一乐🤡
 
+**因为下载器是根据网页结构进行分析的, 如果禁漫天堂的页面进行了更新, 很可能会下载失败, 所以当使用过程中发现报错或者下载失败, 请提交issue通知我更新代码.**
+
 ## 更新记录
 
 - 2021/3/27 14:04 v3.0.0 放弃springboot框架, 换成使用响应式框架quarkus, 感觉应该是更快了的.
@@ -85,7 +87,7 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 comic.download.path=C:\\Users\\jiayao\\Pictures
 comic.proxy.host=127.0.0.1
 comic.proxy.port=10808
-   ```
+```
 
 4.执行`mvn clean package` 得到最后的jar包
 
