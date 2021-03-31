@@ -33,6 +33,7 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 通过以下步骤即可在GitHub Action上运行程序
 
 1. 点击图中fork按钮, fork一份我的项目给你自己.![image.png](https://i.loli.net/2021/02/25/r1EzkUtY4agP3sA.png)
+   如果你以前fork过一次, 然后我提交了代码对bug修复, 但是你不懂得如何将我的修复代码合并到你的仓库, 那你可以直接删掉你的仓库, 重新fork一次.
 
 2. 进入`/src/main/resources/downloadPath.json`目录, 点击箭头所指的编辑按钮,
    对该文件进行编辑.![image.png](https://i.loli.net/2021/02/25/gxre6j2PVYnl53d.png)

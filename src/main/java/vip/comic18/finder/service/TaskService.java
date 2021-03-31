@@ -48,7 +48,7 @@ public class TaskService {
         if(StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>") == null) {
             //说明该漫画是单章漫画,没有区分章节,例如王者荣耀图鉴类型的https://18comic.vip/album/203961
             var url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", ">開始閱讀<"), "href=\"", "/\"");
-            var name = StrUtil.removeAny(StrUtil.splitTrim(StrUtil.replaceChars(StrUtil.subBetween(body, "<h1>", "</h1>"), new char[]{'/', '\\'}, StrUtil.DASHED), " ").toString(), "[", "]", ",");
+            var name = StrUtil.removeAny(StrUtil.splitTrim(StrUtil.replaceChars(StrUtil.subBetween(body, "<h1>", "</h1>"), new char[]{'/', '\\', '|'}, StrUtil.DASHED), " ").toString(), "[", "]", ",");
             var updatedAt = DateUtil.parse(StrUtil.subBetween(StrUtil.subBetween(body, "itemprop=\"datePublished\"", "上架日期"), "content=\"", "\""));
             var chapterEntity = new ChapterEntity(name, host + url, updatedAt);
             chapterEntities.add(chapterEntity);
@@ -65,7 +65,7 @@ public class TaskService {
             chapter = StrUtil.removeAll(chapter, '\n', '\r');
             chapter = StrUtil.subAfter(chapter, "<li", false);
             var nameAndDate = StrUtil.subBetweenAll(chapter, ">", "<");
-            var name = StrUtil.removeAny(StrUtil.splitTrim(StrUtil.replaceChars(nameAndDate[ 0 ], new char[]{'/', '\\'}, StrUtil.DASHED), " ").toString(), "[", "]", ",");
+            var name = StrUtil.removeAny(StrUtil.splitTrim(StrUtil.replaceChars(nameAndDate[ 0 ], new char[]{'/', '\\', '|'}, StrUtil.DASHED), " ").toString(), "[", "]", ",");
             var updatedAt = DateUtil.parse(nameAndDate[ nameAndDate.length - 1 ]);
             var chapterEntity = new ChapterEntity(name, host + url, updatedAt);
             chapterEntities.add(chapterEntity);
@@ -168,7 +168,7 @@ public class TaskService {
 
     public String getTitle(String body) {
         String title = StrUtil.subBetween(body, "<h1>", "</h1>");
-        title = StrUtil.replaceChars(title, new char[]{'/', '\\'}, StrUtil.DASHED);
+        title = StrUtil.replaceChars(title, new char[]{'/', '\\', '|'}, StrUtil.DASHED);
         title = StrUtil.trim(title);
         return title;
     }
