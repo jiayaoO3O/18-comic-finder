@@ -55,11 +55,11 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
    注意尽量不要添加太多漫画, 否则下载起来时间要很久, 压缩包也会很大, 并且添加的链接要是直接能访问到禁漫天堂的网站, 而不是各种镜像站, 根据禁漫天堂的公告板提示, 你所添加的漫画域名应该是以下几个网站 :
 
    > [https://18comic.vip](https://18comic.vip/)
-
+   > 
    > [https://18comic.org](https://18comic.org/)
-
+   > 
    > [https://18comic1.one](https://18comic1.one/)
-
+   > 
    > [https://18comic2.one](https://18comic2.one/)
 
    添加完成之后, 点击下方提交按钮 :
@@ -125,7 +125,7 @@ comic.proxy.port=10808
 
 添加数据之后, 打包, 然后在确保已经有jdk 16之后, 命令行中进入jar包所在的目录, 执行`java -jar ./*.jar`即可按照前台模式运行程序,程序会自动下载json文件中的所有漫画 , 当下载完成之后, 程序会自动退出.
 
-如果没有条件打包程序, 但是有条件运行程序, 例如只装了jdk16但是没有装maven等, 那就直接下载我提供的jar包, 然后命令行进入jar所在的目录, 执行`java -jar ./*.jar 漫画路径1 漫画路径2`
+如果没有条件打包程序, 但是有条件运行程序, 例如只装了jdk16但是没有装maven等, 那就直接下载我提供的jar包, 按照上面说的在jar包所在的目录新建一个config文件夹, 在里面新建一个application.properties文件, 然后命令行进入jar所在的目录, 执行`java -jar ./*.jar 漫画路径1 漫画路径2`
 ,例如 `java -jar ./*.jar https://18comic.vip/album/180459` , 这时候这本漫画就会被下载, 多本漫画请用空格隔开.
 
 ### 后台模式
@@ -142,13 +142,13 @@ http://localhost:7788/finder/download?homePage=你想要下载的漫画主页
 
 即可开始下载整本漫画, 例如
 
-```
+```url
 http://localhost:7788/finder/download?homePage=https://18comic.vip/album/177680
 ```
 
 如果想要下载单独的某一个章节, 只需要输入对应的章节主页即可, 例如
 
-```
+```url
 http://localhost:7788/finder/download?homePage=https://18comic.vip/photo/211115
 ```
 
