@@ -29,7 +29,7 @@ public class ComicController {
     @Path("/download")
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<String> download(@QueryParam("homePage") String homePage) {
-        if(homePage == null) {
+        if(StrUtil.isEmpty(homePage)) {
             log.error("download->homePage为空");
             return Uni.createFrom().item("homePage为空");
         }

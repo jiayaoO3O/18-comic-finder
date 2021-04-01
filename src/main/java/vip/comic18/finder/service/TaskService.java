@@ -42,9 +42,9 @@ public class TaskService {
     @Named("webClient")
     WebClient webClient;
 
-    public Multi<ChapterEntity> getChapterInfo(String body, String comicHomePage) {
+    public Multi<ChapterEntity> getChapterInfo(String body, String homePage) {
         var chapterEntities = new ArrayList<ChapterEntity>();
-        var host = "https://" + StrUtil.subBetween(comicHomePage, "//", "/");
+        var host = "https://" + StrUtil.subBetween(homePage, "//", "/");
         if(StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>") == null) {
             //说明该漫画是单章漫画,没有区分章节,例如王者荣耀图鉴类型的https://18comic.vip/album/203961
             var url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", ">開始閱讀<"), "href=\"", "/\"");
@@ -59,7 +59,7 @@ public class TaskService {
         var chapters = StrUtil.subBetweenAll(body, "<a ", "</li>");
         for(var chapter : chapters) {
             var url = StrUtil.subBetween(chapter, "href=\"", "\"");
-            if(comicHomePage.contains("photo") && !comicHomePage.equals(host + url)) {
+            if(homePage.contains("photo") && !homePage.equals(host + url)) {
                 continue;
             }
             chapter = StrUtil.removeAll(chapter, '\n', '\r');
@@ -69,13 +69,12 @@ public class TaskService {
             var updatedAt = DateUtil.parse(nameAndDate[ nameAndDate.length - 1 ]);
             var chapterEntity = new ChapterEntity(name, host + url, updatedAt);
             chapterEntities.add(chapterEntity);
-            log.info(chapterEntity.toString());
         }
         return Multi.createFrom().iterable(chapterEntities);
     }
 
     public Multi<PhotoEntity> getPhotoInfo(ChapterEntity chapterEntity) {
-        return this.get(chapterEntity.url()).onItem().transformToMulti(response -> {
+        return this.createGet(chapterEntity.url()).onItem().transformToMulti(response -> {
             var photoEntities = new ArrayList<PhotoEntity>();
             var body = response.bodyAsString();
             body = StrUtil.subBetween(body, "<div class=\"row thumb-overlay-albums\" style=\"\">", "<div class=\"tab-content");
@@ -135,13 +134,13 @@ public class TaskService {
     }
 
     public void getAndSaveImage(String url, String photoPath) {
-        this.get(url).subscribe().with(response -> {
+        this.createGet(url).subscribe().with(response -> {
             log.info(StrUtil.format("getAndSaveImage->成功下载图片:[{}]", url));
             this.write(photoPath, response.body()).subscribe().with(succeed -> log.info(StrUtil.format("getAndSaveImage->保存文件成功:[{}]", photoPath)));
         });
     }
 
-    public Uni<HttpResponse<Buffer>> get(String url) {
+    public Uni<HttpResponse<Buffer>> createGet(String url) {
         return webClient.getAbs(url).port(443).followRedirects(true).send().onFailure().retry().withBackOff(Duration.ofSeconds(1L), Duration.ofSeconds(3L)).atMost(10).onFailure().invoke(e -> log.error(StrUtil.format("网络请求:[{}]失败:[{}]", url, e.getLocalizedMessage()), e));
     }
 

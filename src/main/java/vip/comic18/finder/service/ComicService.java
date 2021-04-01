@@ -51,7 +51,7 @@ public class ComicService {
                         vertx.fileSystem().mkdirs(dirPath).onFailure().invoke(e -> log.error(StrUtil.format("downloadComic->创建文件夹失败:[{}]", e.getLocalizedMessage()), e)).subscribe().with(mkdirSucceed -> {
                             if(chapterEntity.updatedAt().after(DateUtil.parse("2020-10-27"))) {
                                 log.info(StrUtil.format("downloadComic->该章节:[{}]图片:[{}]需要进行反反爬虫处理", chapterEntity.name(), photoEntity.name()));
-                                var bufferUni = taskService.get(photoEntity.url()).onItem().transform(HttpResponse::body);
+                                var bufferUni = taskService.createGet(photoEntity.url()).onItem().transform(HttpResponse::body);
                                 var tempFile = taskService.getTempFile(bufferUni);
                                 taskService.process(photoPath, tempFile);
                             } else {
@@ -65,13 +65,19 @@ public class ComicService {
     }
 
 
-    public Uni<String> getComicInfo(String comicHomePage) {
-        comicHomePage = StrUtil.contains(comicHomePage, "photo") ? StrUtil.replace(comicHomePage, "photo", "album") : comicHomePage;
-        var homePageUni = taskService.get(comicHomePage);
+    public Uni<String> getComicInfo(String homePage) {
+        //如果网页中存在photo字段, 说明传入的链接是某个章节, 而不是漫画首页, 此时需要将photo换成album再访问, 禁漫天堂会自动重定向到该漫画的首页.
+        homePage = StrUtil.contains(homePage, "photo") ? StrUtil.replace(homePage, "photo", "album") : homePage;
+        var homePageUni = taskService.createGet(homePage);
         return homePageUni.onItem().transform(HttpResponse::bodyAsString);
     }
 
     public boolean exit() {
+        /*
+         前台模式的退出时机检测.
+         一个异步程序什么时候能够结束运行是不好判断的, 因为所有的处理都是异步的, 不一定能够判断什么时候程序执行完成了,
+         所以这里的解决方案是间歇性读取日志文件, 如果发现日志文件长时间没有被修改, 那就说明程序已经完成任务了, 可以停止运行了.
+        */
         var path = Path.of(logPath);
         var compareTo = 0;
         try {
