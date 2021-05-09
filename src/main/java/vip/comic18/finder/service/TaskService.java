@@ -10,6 +10,7 @@ import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import vip.comic18.finder.entity.ChapterEntity;
 import vip.comic18.finder.entity.PhotoEntity;
@@ -25,12 +26,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Optional;
 
 /**
  * Created by jiayao on 2021/3/23.
  */
 @ApplicationScoped
 public class TaskService {
+    @ConfigProperty(name = "comic.request.cookie")
+    Optional<String> cookie;
 
     @Inject
     Logger log;
@@ -141,7 +145,9 @@ public class TaskService {
     }
 
     public Uni<HttpResponse<Buffer>> createGet(String url) {
-        return webClient.getAbs(url).port(443).followRedirects(true).send().onFailure().retry().withBackOff(Duration.ofSeconds(1L), Duration.ofSeconds(3L)).atMost(10).onFailure().invoke(e -> log.error(StrUtil.format("网络请求:[{}]失败:[{}]", url, e.getLocalizedMessage()), e));
+        var request = webClient.getAbs(url).port(443).followRedirects(true);
+        cookie.ifPresent(cook -> request.putHeader("cookie", cook));
+        return request.send().onFailure().retry().withBackOff(Duration.ofSeconds(1L), Duration.ofSeconds(3L)).atMost(10).onFailure().invoke(e -> log.error(StrUtil.format("网络请求:[{}]失败:[{}]", url, e.getLocalizedMessage()), e));
     }
 
     public Uni<Void> write(String path, Buffer buffer) {
@@ -172,7 +178,7 @@ public class TaskService {
     }
 
     private String removeIllegalCharacter(String name) {
-        name = StrUtil.replaceChars(name, new char[] { '/', '\\', ':', '*', '?', '"', '<', '>', '|' }, StrUtil.DASHED);
+        name = StrUtil.replaceChars(name, new char[]{'/', '\\', ':', '*', '?', '"', '<', '>', '|'}, StrUtil.DASHED);
         name = StrUtil.trim(name);
         return name;
     }

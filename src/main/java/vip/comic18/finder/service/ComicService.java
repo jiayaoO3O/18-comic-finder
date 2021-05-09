@@ -69,7 +69,11 @@ public class ComicService {
         //如果网页中存在photo字段, 说明传入的链接是某个章节, 而不是漫画首页, 此时需要将photo换成album再访问, 禁漫天堂会自动重定向到该漫画的首页.
         homePage = StrUtil.contains(homePage, "photo") ? StrUtil.replace(homePage, "photo", "album") : homePage;
         var homePageUni = taskService.createGet(homePage);
-        return homePageUni.onItem().transform(HttpResponse::bodyAsString);
+        return homePageUni.onItem().transform(homePageBody -> {
+            var body = homePageBody.bodyAsString();
+            log.info(body);
+            return body;
+        });
     }
 
     public boolean exit() {

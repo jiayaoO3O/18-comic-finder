@@ -12,6 +12,7 @@ java这门语言能让小项目变成中项目, 中项目变成大项目 🤡
 
 ## 更新记录
 
+- **2021/5/9 17:30 由于禁漫天堂最近加了Cloudflare 5秒盾反爬虫, 暂时需要在配置文件中添加cookie才能爬取, 请根据下方说明添加cookie, 后续我看看用什么方法绕过拦截.**
 - 2021/4/13 14:30 添加触发action的限制, 只有修改了downloadPath.json文件才会触发action, 修改其他文件则不触发.
 - 2021/3/27 14:04 v3.0.0 放弃springboot框架, 换成使用响应式框架quarkus, 感觉应该是更快了的.
 - **2021/2/25 15:16 v2.0.0重大更新, 支持直接使用Github Action自动爬取漫画, 不需要本地部署, 直接输入漫画url然后等待Github Action爬取完成然后下载压缩包即可.**
@@ -33,9 +34,9 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 
 通过以下步骤即可在GitHub Action上运行程序
 
-1. 点击图中fork按钮, fork一份我的项目给你自己.![image.png](https://i.loli.net/2021/02/25/r1EzkUtY4agP3sA.png)
+0. 点击图中fork按钮, fork一份我的项目给你自己.![image.png](https://i.loli.net/2021/02/25/r1EzkUtY4agP3sA.png)
    如果你以前fork过一次, 然后我提交了代码对bug修复, 但是你不懂得如何将我的修复代码合并到你的仓库, 那你可以直接删掉你的仓库, 重新fork一次.
-
+1.
 2. 进入`/src/main/resources/downloadPath.json`目录, 点击箭头所指的编辑按钮,
    对该文件进行编辑.![image.png](https://i.loli.net/2021/02/25/gxre6j2PVYnl53d.png)
 
@@ -56,11 +57,11 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
    注意尽量不要添加太多漫画, 否则下载起来时间要很久, 压缩包也会很大, 并且添加的链接要是直接能访问到禁漫天堂的网站, 而不是各种镜像站, 根据禁漫天堂的公告板提示, 你所添加的漫画域名应该来自以下几个 :
 
    > [https://18comic.vip](https://18comic.vip/)
-   > 
+   >
    > [https://18comic.org](https://18comic.org/)
-   > 
+   >
    > [https://18comic1.one](https://18comic1.one/)
-   > 
+   >
    > [https://18comic2.one](https://18comic2.one/)
 
    添加完成之后, 点击下方提交按钮 :
@@ -91,6 +92,7 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 comic.download.path=C:\\Users\\jiayao\\Pictures
 comic.proxy.host=127.0.0.1
 comic.proxy.port=10808
+comic.request.cookie=
 ```
 
 4.执行`mvn clean package` 得到最后的jar包
@@ -126,7 +128,8 @@ comic.proxy.port=10808
 
 添加数据之后, 打包, 然后在确保已经有jdk 16之后, 命令行中进入jar包所在的目录, 执行`java -jar ./*.jar`即可按照前台模式运行程序,程序会自动下载json文件中的所有漫画 , 当下载完成之后, 程序会自动退出.
 
-如果没有条件打包程序, 但是有条件运行程序, 例如只装了jdk16但是没有装maven等, 那就直接下载我提供的jar包, 按照上面说的在jar包所在的目录新建一个config文件夹, 在里面新建一个application.properties文件, 然后命令行进入jar所在的目录, 执行`java -jar ./*.jar 漫画路径1 漫画路径2`
+如果没有条件打包程序, 但是有条件运行程序, 例如只装了jdk16但是没有装maven等, 那就直接下载我提供的jar包, 按照上面说的在jar包所在的目录新建一个config文件夹,
+在里面新建一个application.properties文件, 然后命令行进入jar所在的目录, 执行`java -jar ./*.jar 漫画路径1 漫画路径2`
 ,例如 `java -jar ./*.jar https://18comic.vip/album/180459` , 这时候这本漫画就会被下载, 多本漫画请用空格隔开.
 
 ### 后台模式
