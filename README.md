@@ -36,16 +36,19 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 
 0. 点击图中fork按钮, fork一份我的项目给你自己.![image.png](https://i.loli.net/2021/02/25/r1EzkUtY4agP3sA.png)
    如果你以前fork过一次, 然后我提交了代码对bug修复, 但是你不懂得如何将我的修复代码合并到你的仓库, 那你可以直接删掉你的仓库, 重新fork一次.
-1.
-2. 进入`/src/main/resources/downloadPath.json`目录, 点击箭头所指的编辑按钮,
-   对该文件进行编辑.![image.png](https://i.loli.net/2021/02/25/gxre6j2PVYnl53d.png)
 
-3. 按照json格式填入漫画链接, 如果要下载一本, 那格式为 :
-    ```json
-    [
-      "https://18comic.vip/album/180459/"
-    ]
-    ```
+1. 进入禁漫天堂的主页, 此时会显示让你等待5秒自动重定向的提示:![image.png](https://i.loli.net/2021/05/09/jWvEzOuNLM4B7XA.png)过完5秒之后, 浏览器才会正常进入禁漫天堂页面, 此时按F12进入浏览器的控制台模式, 按照下图步骤找到当前网页的cookie,  将红色框cookie冒号后面的内容复制出来.![image.png](https://i.loli.net/2021/05/09/igAnNTWqp4v8mOJ.png)
+
+2. 进入`/src/main/resources/application.properties`,点击箭头所指的编辑按钮,对文件进行编辑![image.png](https://i.loli.net/2021/05/09/qZTihgoCEdQFBUN.png) 只需要改动**comic.request.cookie**这一行, 将刚刚复制的cookie内容粘贴进去, 然后点击提交按钮. ![image.png](https://i.loli.net/2021/05/09/LpRBsoeHIMYjQm2.png)
+
+3. 进入`/src/main/resources/downloadPath.json`, 点击箭头所指的编辑按钮,对该文件进行编辑.![image.png](https://i.loli.net/2021/02/25/gxre6j2PVYnl53d.png)
+
+4. 按照json格式填入漫画链接, 如果要下载一本, 那格式为 :
+   ```json
+   [
+     "https://18comic.vip/album/180459/"
+   ]
+   ```
    如果要下载两本或者多本, 格式为(注意逗号) :
     ```json
     [
@@ -68,7 +71,7 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 
    ![image.png](https://i.loli.net/2021/02/25/O745iyUbfZvBDSN.png)
 
-4. 提交完成之后进入Actions页面查看程序运行状况 :![image.png](https://i.loli.net/2021/02/25/2h4n9q1LuFKCeB6.png)
+5. 提交完成之后进入Actions页面查看程序运行状况 :![image.png](https://i.loli.net/2021/02/25/2h4n9q1LuFKCeB6.png)
 
    ![image.png](https://i.loli.net/2021/02/25/BgwedXxFGtThRC9.png)
 
@@ -82,11 +85,12 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 
 2. 安装maven.
 
-3. 下载源代码并且修改**application.properties**文件中的以下3个配置 :
+3. 下载源代码并且修改**application.properties**文件中的以下4个配置 :
 
     - comic.download.path : 下载到本地的目录
     - comic.proxy.host : 科学上网的ip
     - comic.proxy.port : 科学上网的端口
+    - comic.request.cookie : 禁漫天堂网站的cookie
 
 ```properties
 comic.download.path=C:\\Users\\jiayao\\Pictures
@@ -118,7 +122,7 @@ comic.request.cookie=
 如果要下载两本或者多本, 格式为(注意逗号) :
 
  ```json
- [
+[
   "https://18comic.vip/album/180459/",
   "https://18comic.vip/album/182168"
 ]
@@ -129,7 +133,7 @@ comic.request.cookie=
 添加数据之后, 打包, 然后在确保已经有jdk 16之后, 命令行中进入jar包所在的目录, 执行`java -jar ./*.jar`即可按照前台模式运行程序,程序会自动下载json文件中的所有漫画 , 当下载完成之后, 程序会自动退出.
 
 如果没有条件打包程序, 但是有条件运行程序, 例如只装了jdk16但是没有装maven等, 那就直接下载我提供的jar包, 按照上面说的在jar包所在的目录新建一个config文件夹,
-在里面新建一个application.properties文件, 然后命令行进入jar所在的目录, 执行`java -jar ./*.jar 漫画路径1 漫画路径2`
+在里面新建一个application.properties文件, 写入所需要的配置信息, 然后命令行进入jar所在的目录, 执行`java -jar ./*.jar 漫画路径1 漫画路径2`
 ,例如 `java -jar ./*.jar https://18comic.vip/album/180459` , 这时候这本漫画就会被下载, 多本漫画请用空格隔开.
 
 ### 后台模式
