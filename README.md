@@ -10,10 +10,9 @@ java这门语言能让小项目变成中项目, 中项目变成大项目 🤡
 
 **因为下载器是根据网页结构进行分析的, 如果禁漫天堂的页面进行了更新, 很可能会下载失败, 所以当使用过程中发现报错或者下载失败, 请提交issue通知我更新代码.**
 
-## 2020.05.09 目前github action不能够通过添加cookie来进行爬虫, 待我有空研究一波, 莫急.
-
 ## 更新记录
 
+- 2021/05/15 18:34 周末突然发现禁漫天堂又撤掉了Cloudflare 5秒盾, 程序又能直接通过github action使用了, 不需要添加cookie.
 - **2021/5/9 17:30 由于禁漫天堂最近加了Cloudflare 5秒盾反爬虫, 暂时需要在配置文件中添加cookie才能爬取, 请根据下方说明添加cookie, 后续我看看用什么方法绕过拦截.**
 - 2021/4/13 14:30 添加触发action的限制, 只有修改了downloadPath.json文件才会触发action, 修改其他文件则不触发.
 - 2021/3/27 14:04 v3.0.0 放弃springboot框架, 换成使用响应式框架quarkus, 感觉应该是更快了的.
@@ -39,9 +38,9 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 0. 点击图中fork按钮, fork一份我的项目给你自己.![image.png](https://i.loli.net/2021/02/25/r1EzkUtY4agP3sA.png)
    如果你以前fork过一次, 然后我提交了代码对bug修复, 但是你不懂得如何将我的修复代码合并到你的仓库, 那你可以直接删掉你的仓库, 重新fork一次.
 
-1. 进入禁漫天堂的主页, 此时会显示让你等待5秒自动重定向的提示:![image.png](https://i.loli.net/2021/05/09/jWvEzOuNLM4B7XA.png)过完5秒之后, 浏览器才会正常进入禁漫天堂页面, 此时按F12进入浏览器的控制台模式, 按照下图步骤找到当前网页的cookie,  将红色框cookie冒号后面的内容复制出来.![image.png](https://i.loli.net/2021/05/09/igAnNTWqp4v8mOJ.png)
+[comment]: <> (1. 进入禁漫天堂的主页, 此时会显示让你等待5秒自动重定向的提示:![image.png]&#40;https://i.loli.net/2021/05/09/jWvEzOuNLM4B7XA.png&#41;过完5秒之后, 浏览器才会正常进入禁漫天堂页面, 此时按F12进入浏览器的控制台模式, 按照下图步骤找到当前网页的cookie,  将红色框cookie冒号后面的内容复制出来.![image.png]&#40;https://i.loli.net/2021/05/09/igAnNTWqp4v8mOJ.png&#41;)
 
-2. 进入`/src/main/resources/application.properties`,点击箭头所指的编辑按钮,对文件进行编辑![image.png](https://i.loli.net/2021/05/09/qZTihgoCEdQFBUN.png) 只需要改动**comic.request.cookie**这一行, 将刚刚复制的cookie内容粘贴进去, 然后点击提交按钮. ![image.png](https://i.loli.net/2021/05/09/LpRBsoeHIMYjQm2.png)
+[comment]: <> (2. 进入`/src/main/resources/application.properties`,点击箭头所指的编辑按钮,对文件进行编辑![image.png]&#40;https://i.loli.net/2021/05/09/qZTihgoCEdQFBUN.png&#41; 只需要改动**comic.request.cookie**这一行, 将刚刚复制的cookie内容粘贴进去, 然后点击提交按钮. ![image.png]&#40;https://i.loli.net/2021/05/09/LpRBsoeHIMYjQm2.png&#41;)
 
 3. 进入`/src/main/resources/downloadPath.json`, 点击箭头所指的编辑按钮,对该文件进行编辑.![image.png](https://i.loli.net/2021/02/25/gxre6j2PVYnl53d.png)
 
@@ -92,13 +91,13 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
     - comic.download.path : 下载到本地的目录
     - comic.proxy.host : 科学上网的ip
     - comic.proxy.port : 科学上网的端口
-    - comic.request.cookie : 禁漫天堂网站的cookie
+
+[comment]: <> (    - comic.request.cookie : 禁漫天堂网站的cookie)
 
 ```properties
 comic.download.path=C:\\Users\\jiayao\\Pictures
 comic.proxy.host=127.0.0.1
 comic.proxy.port=10808
-comic.request.cookie=
 ```
 
 4.执行`mvn clean package` 得到最后的jar包
