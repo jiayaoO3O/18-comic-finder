@@ -86,7 +86,7 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 
 2. 安装maven.
 
-3. 下载源代码并且修改**application.properties**文件中的以下4个配置 :
+3. 下载源代码并且修改**application.properties**文件中的以下几个配置 :
 
     - comic.download.path : 下载到本地的目录
     - comic.proxy.host : 科学上网的ip
@@ -102,7 +102,7 @@ comic.proxy.port=10808
 
 4.执行`mvn clean package` 得到最后的jar包
 
-如果直接下载我提供的jar包, 请在jar包所在的目录**新建一个config文件夹**, 在里面新建一个**application.properties**文件, 然后粘贴并且修改上述四个参数
+如果直接下载我提供的jar包, 请在jar包所在的目录**新建一个config文件夹**, 在里面新建一个**application.properties**文件, 然后粘贴并且修改上述几个参数
 
 ## 运行程序
 
@@ -134,7 +134,7 @@ comic.proxy.port=10808
 添加数据之后, 打包, 然后在确保已经有jdk 16之后, 命令行中进入jar包所在的目录, 执行`java -jar ./*.jar`即可按照前台模式运行程序,程序会自动下载json文件中的所有漫画 , 当下载完成之后, 程序会自动退出.
 
 如果没有条件打包程序, 但是有条件运行程序, 例如只装了jdk16但是没有装maven等, 那就直接下载我提供的jar包, 按照上面说的在jar包所在的目录新建一个config文件夹,
-在里面新建一个application.properties文件, 粘贴并且修改上述四个参数, 然后命令行进入jar所在的目录, 执行`java -jar ./*.jar 漫画路径1 漫画路径2`
+在里面新建一个application.properties文件, 粘贴并且修改上述几个个参数, 然后命令行进入jar所在的目录, 执行`java -jar ./*.jar 漫画路径1 漫画路径2`
 ,例如 `java -jar ./*.jar https://18comic.vip/album/180459` , 这时候这本漫画就会被下载, 多本漫画请用空格隔开.
 
 ### 后台模式
