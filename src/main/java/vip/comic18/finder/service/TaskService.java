@@ -81,6 +81,9 @@ public class TaskService {
         return this.createGet(chapterEntity.url()).onItem().transformToMulti(response -> {
             var photoEntities = new ArrayList<PhotoEntity>();
             var body = response.bodyAsString();
+            if(StrUtil.contains(body, "禁漫娘被你玩壞啦")) {
+                log.info(body);
+            }
             body = StrUtil.subBetween(body, "<div class=\"row thumb-overlay-albums\" style=\"\">", "<div class=\"tab-content");
             var photos = StrUtil.subBetweenAll(body, "data-original=\"", "\" class=");
             for(var photo : photos) {
@@ -147,7 +150,21 @@ public class TaskService {
     public Uni<HttpResponse<Buffer>> createGet(String url) {
         var request = webClient.getAbs(url).port(443).followRedirects(true);
         cookie.ifPresent(cook -> request.putHeader("cookie", cook));
-        return request.send().onFailure().retry().withBackOff(Duration.ofSeconds(1L), Duration.ofSeconds(3L)).atMost(10).onFailure().invoke(e -> log.error(StrUtil.format("网络请求:[{}]失败:[{}]", url, e.getLocalizedMessage()), e));
+        return request.send().onItem().transform(response -> {
+            if(StrUtil.contains(response.bodyAsString(), "休息一分鐘")) {
+                log.error(StrUtil.format("发送请求[{}]->访问频率过高导致需要等待, 正在进入重试:[{}]", url, response.bodyAsString()));
+                throw new IllegalStateException(response.bodyAsString());
+            }
+            if(StrUtil.contains(response.bodyAsString(), "Checking your browser before accessing")) {
+                log.error(StrUtil.format("发送请求[{}]->发现反爬虫五秒盾, 正在进入重试:[Checking your browser before accessing]", url));
+                throw new IllegalStateException("Checking your browser before accessing");
+            }
+            if(StrUtil.contains(response.bodyAsString(), "Restricted Access")) {
+                log.error(StrUtil.format("发送请求[{}]->访问受限, 正在进入重试:[Restricted Access!]", url));
+                throw new IllegalStateException("Restricted Access!");
+            }
+            return response;
+        }).onFailure().retry().withBackOff(Duration.ofSeconds(8L)).atMost(Long.MAX_VALUE).onFailure().invoke(e -> log.error(StrUtil.format("网络请求:[{}]失败:[{}]", url, e.getLocalizedMessage()), e));
     }
 
     public Uni<Void> write(String path, Buffer buffer) {
