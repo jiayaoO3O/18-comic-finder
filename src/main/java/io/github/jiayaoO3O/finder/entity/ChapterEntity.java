@@ -1,4 +1,4 @@
-package vip.comic18.finder.entity;
+package io.github.jiayaoO3O.finder.entity;
 
 import java.util.Date;
 

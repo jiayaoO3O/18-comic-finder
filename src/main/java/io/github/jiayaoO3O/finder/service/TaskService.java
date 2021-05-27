@@ -1,4 +1,4 @@
-package vip.comic18.finder.service;
+package io.github.jiayaoO3O.finder.service;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
@@ -12,8 +12,8 @@ import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-import vip.comic18.finder.entity.ChapterEntity;
-import vip.comic18.finder.entity.PhotoEntity;
+import io.github.jiayaoO3O.finder.entity.ChapterEntity;
+import io.github.jiayaoO3O.finder.entity.PhotoEntity;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.imageio.ImageIO;

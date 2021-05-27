@@ -1,4 +1,4 @@
-package vip.comic18.finder.config;
+package io.github.jiayaoO3O.finder.config;
 
 import io.vertx.core.net.ProxyOptions;
 import io.vertx.core.net.ProxyType;

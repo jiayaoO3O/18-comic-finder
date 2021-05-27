@@ -1,4 +1,4 @@
-package vip.comic18.finder.service;
+package io.github.jiayaoO3O.finder.service;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;

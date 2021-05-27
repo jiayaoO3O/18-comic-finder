@@ -1,4 +1,4 @@
-package vip.comic18.finder.entity;
+package io.github.jiayaoO3O.finder.entity;
 
 /**
  * Created by jiayao on 2021/3/23.

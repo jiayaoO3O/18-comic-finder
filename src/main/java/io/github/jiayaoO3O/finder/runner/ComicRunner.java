@@ -1,4 +1,4 @@
-package vip.comic18.finder.runner;
+package io.github.jiayaoO3O.finder.runner;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.resource.ClassPathResource;
@@ -7,11 +7,11 @@ import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import io.github.jiayaoO3O.finder.service.ComicService;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.QuarkusApplication;
 import io.quarkus.runtime.annotations.QuarkusMain;
 import org.jboss.logging.Logger;
-import vip.comic18.finder.service.ComicService;
 
 import javax.inject.Inject;
 import java.util.Arrays;

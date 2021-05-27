@@ -1,8 +1,8 @@
-package vip.comic18.finder.controller;
+package io.github.jiayaoO3O.finder.controller;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
-import vip.comic18.finder.service.ComicService;
+import io.github.jiayaoO3O.finder.service.ComicService;
 import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 
