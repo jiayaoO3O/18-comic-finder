@@ -27,7 +27,7 @@ public class ComicRunner implements QuarkusApplication {
     @Inject
     ComicService comicService;
 
-    private List<String> comicHomePages = JSONUtil.toList(new ClassPathResource("downloadPath.json").readUtf8Str(), String.class);
+    private final List<String> comicHomePages = JSONUtil.toList(new ClassPathResource("downloadPath.json").readUtf8Str(), String.class);
 
     @Override
     public int run(String... args) {
@@ -46,6 +46,7 @@ public class ComicRunner implements QuarkusApplication {
         while(!comicService.exit()) {
             ThreadUtil.sleep(2000L);
         }
+        log.info("任务结束,看漫愉快");
         return 0;
     }
 }

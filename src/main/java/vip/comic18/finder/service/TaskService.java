@@ -164,7 +164,7 @@ public class TaskService {
                 throw new IllegalStateException("Restricted Access!");
             }
             return response;
-        }).onFailure().retry().withBackOff(Duration.ofSeconds(8L)).atMost(Long.MAX_VALUE).onFailure().invoke(e -> log.error(StrUtil.format("网络请求:[{}]失败:[{}]", url, e.getLocalizedMessage()), e));
+        }).onFailure().retry().withBackOff(Duration.ofSeconds(4L), Duration.ofSeconds(8L)).atMost(Long.MAX_VALUE).onFailure().invoke(e -> log.error(StrUtil.format("网络请求:[{}]失败:[{}]", url, e.getLocalizedMessage()), e));
     }
 
     public Uni<Void> write(String path, Buffer buffer) {

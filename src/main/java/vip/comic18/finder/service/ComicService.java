@@ -88,6 +88,4 @@ public class ComicService {
         }
         return compareTo < 0;
     }
-
-
 }
