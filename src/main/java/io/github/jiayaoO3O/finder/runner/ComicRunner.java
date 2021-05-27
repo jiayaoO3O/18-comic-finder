@@ -8,6 +8,7 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import io.github.jiayaoO3O.finder.service.ComicService;
+import io.github.jiayaoO3O.finder.service.TaskService;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.QuarkusApplication;
 import io.quarkus.runtime.annotations.QuarkusMain;
@@ -26,6 +27,8 @@ public class ComicRunner implements QuarkusApplication {
     Logger log;
     @Inject
     ComicService comicService;
+    @Inject
+    TaskService taskService;
 
     private final List<String> comicHomePages = JSONUtil.toList(new ClassPathResource("downloadPath.json").readUtf8Str(), String.class);
 
@@ -43,8 +46,8 @@ public class ComicRunner implements QuarkusApplication {
             return 0;
         }
         comicHomePages.forEach(comicHomePage -> comicService.getComicInfo(comicHomePage).subscribe().with(body -> comicService.consume(comicHomePage, body)));
-        while(!comicService.exit()) {
-            ThreadUtil.sleep(4000L);
+        while(!taskService.exit()) {
+            ThreadUtil.sleep(8000L);
         }
         log.info("任务结束,看漫愉快");
         return 0;

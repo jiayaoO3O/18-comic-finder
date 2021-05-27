@@ -24,6 +24,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -36,6 +37,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TaskService {
     @ConfigProperty(name = "comic.request.cookie")
     Optional<String> cookie;
+
+    @ConfigProperty(name = "quarkus.log.handler.file.\"INFO_LOG\".path")
+    String logPath;
 
     @Inject
     Logger log;
@@ -97,6 +101,7 @@ public class TaskService {
                     var urlAndName = StrUtil.split(photo, "\"");
                     var photoEntity = new PhotoEntity(StrUtil.trim(urlAndName[ 1 ]), StrUtil.trim(urlAndName[ 0 ]));
                     photoEntities.add(photoEntity);
+                    this.addPendingPhotoCount();
                     log.info(StrUtil.format("chapter:[{}]-photo:[{}]-url:[{}]", chapterEntity.name(), photoEntity.name(), photoEntity.url()));
                 }
             }
@@ -151,6 +156,7 @@ public class TaskService {
             log.info(StrUtil.format("getAndSaveImage->成功下载图片:[{}]", url));
             this.write(photoPath, response.body()).subscribe().with(succeed -> {
                 log.info(StrUtil.format("getAndSaveImage->保存文件成功:[{}]", photoPath));
+                this.addProcessedPhotoCount();
             });
         });
     }
@@ -187,6 +193,7 @@ public class TaskService {
         try(var outputStream = Files.newOutputStream(Path.of(path))) {
             ImageIO.write(bufferedImage, "jpg", outputStream);
             log.info(StrUtil.format("保存文件成功:[{}]", path));
+            this.addProcessedPhotoCount();
         } catch(IOException e) {
             log.error(StrUtil.format("保存文件:[{}]失败:[{}]", path, e.getLocalizedMessage()), e);
         }
@@ -200,6 +207,31 @@ public class TaskService {
         String title = StrUtil.subBetween(body, "<h1>", "</h1>");
         title = this.removeIllegalCharacter(title);
         return title;
+    }
+
+    public void addPendingPhotoCount(){
+        log.info(StrUtil.format("生命周期检测->待处理照片数目为:[{}]", this.pendingPhotoCount.incrementAndGet()));
+    }
+
+    public void addProcessedPhotoCount(){
+        log.info(StrUtil.format("生命周期检测->已处理照片数目为:[{}]", this.processedPhotoCount.decrementAndGet()));
+    }
+
+    public boolean exit() {
+        /*
+         前台模式的退出时机检测.
+         一个异步程序什么时候能够结束运行是不好判断的, 因为所有的处理都是异步的, 不一定能够判断什么时候程序执行完成了,
+         所以这里的解决方案是间歇性读取日志文件, 如果发现日志文件长时间没有被修改, 那就说明程序已经完成任务了, 可以停止运行了.
+        */
+        var path = Path.of(logPath);
+        var compareTo = 0;
+        try {
+            var lastModifiedTime = Files.getLastModifiedTime(path);
+            compareTo = lastModifiedTime.compareTo(FileTime.from(DateUtil.toInstant(DateUtil.offsetSecond(DateUtil.date(), -30))));
+        } catch(IOException e) {
+            log.error(StrUtil.format("exit->读取日志错误:[{}]", e.getLocalizedMessage()), e);
+        }
+        return compareTo < 0 && this.processedPhotoCount.get() != this.pendingPhotoCount.get() && this.processedPhotoCount.get() != 0 && this.processedPhotoCount.get() + this.pendingPhotoCount.get() == 0;
     }
 
     private String removeIllegalCharacter(String name) {
