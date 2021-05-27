@@ -21,6 +21,8 @@ jobs:
       with:
         java-version: 16
     - name: 开始打包
+      env:
+        TZ: Asia/Shanghai
       run: |
         mvn -B clean package -Dmaven.test.skip=true --file pom.xml
         cd ./target
