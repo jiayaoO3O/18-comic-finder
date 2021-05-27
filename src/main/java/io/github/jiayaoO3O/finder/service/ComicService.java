@@ -42,6 +42,7 @@ public class ComicService {
         chapterEntities.subscribe().with(chapterEntity -> {
             var photoEntities = taskService.getPhotoInfo(chapterEntity);
             photoEntities.subscribe().with(photoEntity -> {
+                log.info(StrUtil.format("生命周期检测->待处理照片数目为:[{}]", taskService.pendingPhotoCount.incrementAndGet()));
                 var dirPath = downloadPath + File.separatorChar + title + File.separatorChar + chapterEntity.name();
                 var photoPath = dirPath + File.separatorChar + photoEntity.name();
                 vertx.fileSystem().exists(photoPath).subscribe().with(exists -> {
@@ -59,6 +60,7 @@ public class ComicService {
                             }
                         });
                     }
+                    log.info(StrUtil.format("生命周期检测->已处理照片数目为:[{}]", taskService.processedPhotoCount.decrementAndGet()));
                 });
             });
         });
@@ -82,10 +84,11 @@ public class ComicService {
         var compareTo = 0;
         try {
             var lastModifiedTime = Files.getLastModifiedTime(path);
-            compareTo = lastModifiedTime.compareTo(FileTime.from(DateUtil.toInstant(DateUtil.offsetSecond(DateUtil.date(), -40))));
+            compareTo = lastModifiedTime.compareTo(FileTime.from(DateUtil.toInstant(DateUtil.offsetSecond(DateUtil.date(), -30))));
         } catch(IOException e) {
             log.error(StrUtil.format("exit->读取日志错误:[{}]", e.getLocalizedMessage()), e);
         }
-        return compareTo < 0;
+        log.info(StrUtil.format("生命周期检测->待处理照片数目:[{}],已处理照片数目:[{}]", taskService.pendingPhotoCount.get(), taskService.processedPhotoCount.get()));
+        return compareTo < 0 && taskService.processedPhotoCount.get() != taskService.pendingPhotoCount.get() && taskService.processedPhotoCount.get() != 0 && taskService.processedPhotoCount.get() + taskService.pendingPhotoCount.get() == 0;
     }
 }

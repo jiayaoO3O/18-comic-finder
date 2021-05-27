@@ -2,6 +2,8 @@ package io.github.jiayaoO3O.finder.service;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
+import io.github.jiayaoO3O.finder.entity.ChapterEntity;
+import io.github.jiayaoO3O.finder.entity.PhotoEntity;
 import io.smallrye.common.constraint.NotNull;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -12,8 +14,6 @@ import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-import io.github.jiayaoO3O.finder.entity.ChapterEntity;
-import io.github.jiayaoO3O.finder.entity.PhotoEntity;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.imageio.ImageIO;
@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by jiayao on 2021/3/23.
@@ -45,6 +46,10 @@ public class TaskService {
     @Inject
     @Named("webClient")
     WebClient webClient;
+
+    AtomicInteger pendingPhotoCount = new AtomicInteger(0);
+
+    AtomicInteger processedPhotoCount = new AtomicInteger(0);
 
     public Multi<ChapterEntity> getChapterInfo(String body, String homePage) {
         var chapterEntities = new ArrayList<ChapterEntity>();
@@ -119,6 +124,7 @@ public class TaskService {
 
     public Uni<Tuple2<String, Buffer>> getTempFile(Uni<Buffer> bufferUni) {
         var tempFile = this.createTempFile();
+        tempFile.onFailure(e -> e.getLocalizedMessage().contains("abc")).retry().atMost(3);
         return Uni.combine().all().unis(tempFile, bufferUni).asTuple();
     }
 
@@ -143,7 +149,9 @@ public class TaskService {
     public void getAndSaveImage(String url, String photoPath) {
         this.createGet(url).subscribe().with(response -> {
             log.info(StrUtil.format("getAndSaveImage->成功下载图片:[{}]", url));
-            this.write(photoPath, response.body()).subscribe().with(succeed -> log.info(StrUtil.format("getAndSaveImage->保存文件成功:[{}]", photoPath)));
+            this.write(photoPath, response.body()).subscribe().with(succeed -> {
+                log.info(StrUtil.format("getAndSaveImage->保存文件成功:[{}]", photoPath));
+            });
         });
     }
 
@@ -164,7 +172,7 @@ public class TaskService {
                 throw new IllegalStateException("Restricted Access!");
             }
             return response;
-        }).onFailure().retry().withBackOff(Duration.ofSeconds(4L), Duration.ofSeconds(8L)).atMost(Long.MAX_VALUE).onFailure().invoke(e -> log.error(StrUtil.format("网络请求:[{}]失败:[{}]", url, e.getLocalizedMessage()), e));
+        }).onFailure().retry().withBackOff(Duration.ofSeconds(4L), Duration.ofSeconds(16)).atMost(Long.MAX_VALUE).onFailure().invoke(e -> log.error(StrUtil.format("网络请求:[{}]失败:[{}]", url, e.getLocalizedMessage()), e));
     }
 
     public Uni<Void> write(String path, Buffer buffer) {

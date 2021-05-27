@@ -44,7 +44,7 @@ public class ComicRunner implements QuarkusApplication {
         }
         comicHomePages.forEach(comicHomePage -> comicService.getComicInfo(comicHomePage).subscribe().with(body -> comicService.consume(comicHomePage, body)));
         while(!comicService.exit()) {
-            ThreadUtil.sleep(2000L);
+            ThreadUtil.sleep(4000L);
         }
         log.info("任务结束,看漫愉快");
         return 0;
