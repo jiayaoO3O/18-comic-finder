@@ -78,7 +78,7 @@ public class TaskService {
             chapter = StrUtil.removeAll(chapter, '\n', '\r');
             chapter = StrUtil.subAfter(chapter, "<li", false);
             var nameAndDate = StrUtil.subBetweenAll(chapter, ">", "<");
-            var name = StrUtil.removeAny(StrUtil.splitTrim(StrUtil.replaceChars(nameAndDate[ 0 ], new char[]{'/', '\\', '|'}, StrUtil.DASHED), " ").toString(), "[", "]", ",");
+            var name = StrUtil.removeAny(StrUtil.splitTrim(this.removeIllegalCharacter(nameAndDate[ 0 ]), " ").toString(), "[", "]", ",");
             var updatedAt = DateUtil.parse(nameAndDate[ nameAndDate.length - 1 ]);
             var chapterEntity = new ChapterEntity(name, host + url, updatedAt);
             chapterEntities.add(chapterEntity);
