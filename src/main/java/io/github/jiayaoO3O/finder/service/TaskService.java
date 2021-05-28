@@ -191,7 +191,7 @@ public class TaskService {
     }
 
     public void delete(String path) {
-        vertx.fileSystem().delete(path).onFailure().invoke(e -> log.error(StrUtil.format("删除文件:[{}]失败:[{}]", path, e.getLocalizedMessage()), e)).subscribe().with(succeed -> log.info(StrUtil.format("删除临时文件:[{}]", path)));
+        vertx.fileSystem().delete(path).onFailure().invoke(e -> log.error(StrUtil.format("反爬处理->删除文件:[{}]失败:[{}]", path, e.getLocalizedMessage()), e)).subscribe().with(succeed -> log.info(StrUtil.format("反爬处理->删除临时文件:[{}]", path)));
     }
 
     public void write(String path, BufferedImage bufferedImage) {
@@ -205,7 +205,7 @@ public class TaskService {
     }
 
     public Uni<String> createTempFile() {
-        return vertx.fileSystem().createTempFile(String.valueOf(System.nanoTime()), ".tmp").onFailure().invoke(e -> log.error(StrUtil.format("创建临时文件失败:[{}]", e.getLocalizedMessage()), e));
+        return vertx.fileSystem().createTempFile(String.valueOf(System.nanoTime()), ".tmp").onFailure().invoke(e -> log.error(StrUtil.format("反爬处理->创建临时文件失败:[{}]", e.getLocalizedMessage()), e));
     }
 
     public String getTitle(String body) {
