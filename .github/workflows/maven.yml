@@ -24,7 +24,6 @@ jobs:
       run: |
         mvn -B clean package -Dmaven.test.skip=true -Pnative -Dquarkus.native.container-build=true --file pom.xml
         cd ./target
-#        java -jar --enable-preview -Xms512m -Xmx7g ./*.jar
         ./finder-3.0.0-runner
     - name: 上传结果
       uses: actions/upload-artifact@v2.2.2
