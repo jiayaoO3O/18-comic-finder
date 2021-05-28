@@ -112,17 +112,17 @@ public class TaskService {
 
     public void process(String photoPath, Uni<Tuple2<String, Buffer>> tempFileTuple) {
         tempFileTuple.subscribe().with(tuple2 -> this.write(tuple2.getItem1(), tuple2.getItem2()).subscribe().with(succeed -> {
-            log.info(StrUtil.format("写入buffer到临时文件:[{}]成功", tuple2.getItem1()));
+            log.info(StrUtil.format("反爬处理->写入buffer到临时文件:[{}]成功", tuple2.getItem1()));
             BufferedImage bufferedImage = null;
             try(var inputStream = Files.newInputStream(Path.of(tuple2.getItem1()))) {
                 bufferedImage = ImageIO.read(inputStream);
                 if(bufferedImage == null) {
-                    log.error(StrUtil.format("捕获到bufferedImage为空:[{}],图片路径:[{}]", tuple2.getItem1(), photoPath));
+                    log.error(StrUtil.format("反爬处理->捕获到bufferedImage为空:[{}],图片路径:[{}]", tuple2.getItem1(), photoPath));
                 } else {
                     this.write(photoPath, this.reverseImage(bufferedImage));
                 }
             } catch(IOException e) {
-                log.error(StrUtil.format("getImage->创建newInputStream失败:[{}]", e.getLocalizedMessage()), e);
+                log.error(StrUtil.format("反爬处理->创建newInputStream失败:[{}]", e.getLocalizedMessage()), e);
             }
             this.delete(tuple2.getItem1());
         }));
@@ -154,9 +154,9 @@ public class TaskService {
 
     public void getAndSaveImage(String url, String photoPath) {
         this.createGet(url).subscribe().with(response -> {
-            log.info(StrUtil.format("getAndSaveImage->成功下载图片:[{}]", url));
+            log.info(StrUtil.format("图片处理->成功下载图片:[{}]", url));
             this.write(photoPath, response.body()).subscribe().with(succeed -> {
-                log.info(StrUtil.format("getAndSaveImage->保存文件成功:[{}]", photoPath));
+                log.info(StrUtil.format("图片处理->保存文件成功:[{}]", photoPath));
                 this.addProcessedPhotoCount();
             });
         });
@@ -197,10 +197,10 @@ public class TaskService {
     public void write(String path, BufferedImage bufferedImage) {
         try(var outputStream = Files.newOutputStream(Path.of(path))) {
             ImageIO.write(bufferedImage, "jpg", outputStream);
-            log.info(StrUtil.format("保存文件成功:[{}]", path));
+            log.info(StrUtil.format("保存文件->成功:[{}]", path));
             this.addProcessedPhotoCount();
         } catch(IOException e) {
-            log.error(StrUtil.format("保存文件:[{}]失败:[{}]", path, e.getLocalizedMessage()), e);
+            log.error(StrUtil.format("保存文件->失败:[{}][{}]", path, e.getLocalizedMessage()), e);
         }
     }
 
@@ -215,11 +215,11 @@ public class TaskService {
     }
 
     public void addPendingPhotoCount() {
-        log.info(StrUtil.format("生命周期检测->待处理照片数目为:[{}]", this.pendingPhotoCount.incrementAndGet()));
+        log.info(StrUtil.format("生命周期检测->待处理页数:[{}]", this.pendingPhotoCount.incrementAndGet()));
     }
 
     public void addProcessedPhotoCount() {
-        log.info(StrUtil.format("生命周期检测->已处理照片数目为:[{}]", this.processedPhotoCount.decrementAndGet()));
+        log.info(StrUtil.format("生命周期检测->已处理页数:[{}]", this.processedPhotoCount.decrementAndGet()));
     }
 
     public boolean exit() {
@@ -234,7 +234,7 @@ public class TaskService {
             var lastModifiedTime = Files.getLastModifiedTime(path);
             compareTo = lastModifiedTime.compareTo(FileTime.from(DateUtil.toInstant(DateUtil.offsetSecond(DateUtil.date(), -32))));
         } catch(IOException e) {
-            log.error(StrUtil.format("exit->读取日志错误:[{}]", e.getLocalizedMessage()), e);
+            log.error(StrUtil.format("生命周期检测->读取日志错误:[{}]", e.getLocalizedMessage()), e);
         }
         return compareTo < 0 && this.processedPhotoCount.get() != this.pendingPhotoCount.get() && this.processedPhotoCount.get() != 0 && this.processedPhotoCount.get() + this.pendingPhotoCount.get() == 0;
     }
