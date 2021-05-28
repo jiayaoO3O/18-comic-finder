@@ -24,7 +24,7 @@ jobs:
           native-image: true
       - name: 开始打包
         run: |
-          mvn -B clean package -Dmaven.test.skip=true -Pnative -Dquarkus.native.container-build=true --file pom.xml
+          mvn -B clean package -Dmaven.test.skip=true -Pnative --file pom.xml
           cd ./target
           ./finder-3.0.0-runner
       - name: 上传结果
