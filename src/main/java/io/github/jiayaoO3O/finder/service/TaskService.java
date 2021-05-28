@@ -70,9 +70,10 @@ public class TaskService {
         }
         body = StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>");
         var chapters = StrUtil.subBetweenAll(body, "<a ", "</li>");
+        homePage = StrUtil.removeSuffix(homePage, "/");
         for(var chapter : chapters) {
             var url = StrUtil.subBetween(chapter, "href=\"", "\"");
-            if(homePage.contains("photo") && !homePage.equals(host + url + (homePage.endsWith("/") ? "/" : ""))) {
+            if(homePage.contains("photo") && !homePage.equals(host + url)) {
                 continue;
             }
             chapter = StrUtil.removeAll(chapter, '\n', '\r');
@@ -171,6 +172,10 @@ public class TaskService {
             }
             if(StrUtil.contains(response.bodyAsString(), "Checking your browser before accessing")) {
                 log.error(StrUtil.format("发送请求[{}]->发现反爬虫五秒盾, 正在进入重试:[Checking your browser before accessing]", url));
+                throw new IllegalStateException("Checking your browser before accessing");
+            }
+            if(StrUtil.contains(response.bodyAsString(), "Please complete the security check to access")) {
+                log.error(StrUtil.format("发送请求[{}]->发现cloudflare反爬虫验证, 正在进入重试:[Please complete the security check to access]", url));
                 throw new IllegalStateException("Checking your browser before accessing");
             }
             if(StrUtil.contains(response.bodyAsString(), "Restricted Access")) {
