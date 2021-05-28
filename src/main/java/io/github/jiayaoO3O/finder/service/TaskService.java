@@ -72,7 +72,7 @@ public class TaskService {
         var chapters = StrUtil.subBetweenAll(body, "<a ", "</li>");
         for(var chapter : chapters) {
             var url = StrUtil.subBetween(chapter, "href=\"", "\"");
-            if(homePage.contains("photo") && !homePage.equals(host + url)) {
+            if(homePage.contains("photo") && !homePage.equals(host + url + (homePage.endsWith("/") ? "/" : ""))) {
                 continue;
             }
             chapter = StrUtil.removeAll(chapter, '\n', '\r');
@@ -209,11 +209,11 @@ public class TaskService {
         return title;
     }
 
-    public void addPendingPhotoCount(){
+    public void addPendingPhotoCount() {
         log.info(StrUtil.format("生命周期检测->待处理照片数目为:[{}]", this.pendingPhotoCount.incrementAndGet()));
     }
 
-    public void addProcessedPhotoCount(){
+    public void addProcessedPhotoCount() {
         log.info(StrUtil.format("生命周期检测->已处理照片数目为:[{}]", this.processedPhotoCount.decrementAndGet()));
     }
 

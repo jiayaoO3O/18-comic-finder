@@ -21,12 +21,10 @@ jobs:
       with:
         java-version: 16
     - name: 开始打包
-      env:
-        TZ: Asia/Shanghai
       run: |
         mvn -B clean package -Dmaven.test.skip=true --file pom.xml
         cd ./target
-        java -jar --enable-preview ./*.jar
+        java -jar --enable-preview -Xms512m -Xmx7g ./*.jar
     
     - name: 上传结果
       uses: actions/upload-artifact@v2.2.2
