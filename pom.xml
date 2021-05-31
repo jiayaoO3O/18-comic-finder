@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.jiayaoO3O</groupId>
     <artifactId>finder</artifactId>
-    <version>3.0.0</version>
+    <version>3.1.0</version>
     <properties>
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
         <maven.compiler.parameters>true</maven.compiler.parameters>
