@@ -38,7 +38,7 @@ public class TaskService {
     @ConfigProperty(name = "comic.request.cookie")
     Optional<String> cookie;
 
-    @ConfigProperty(name = "quarkus.log.handler.file.\"INFO_LOG\".path")
+    @ConfigProperty(name = "quarkus.log.file.path")
     String logPath;
 
     @Inject
