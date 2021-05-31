@@ -26,7 +26,7 @@ jobs:
         run: |
           mvn -B clean package -Dmaven.test.skip=true --file pom.xml
           cd ./target
-          java -jar --enable-preview -Xms512m -Xmx7g ./*.jar
+          java -jar -Xms1g -Xmx7g ./*.jar
       - name: 上传结果
         uses: actions/upload-artifact@v2.2.2
         with:
