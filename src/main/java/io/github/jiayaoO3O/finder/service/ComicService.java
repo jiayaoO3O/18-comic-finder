@@ -39,8 +39,7 @@ public class ComicService {
                 var photoPath = dirPath + File.separatorChar + photoEntity.name();
                 vertx.fileSystem().exists(photoPath).subscribe().with(exists -> {
                     if(exists) {
-                        log.info(StrUtil.format("downloadComic->图片已下载,跳过:[{}]", photoEntity));
-                        taskService.addProcessedPhotoCount();
+                        log.info(StrUtil.format("{}:图片已下载,跳过:[{}]", taskService.addProcessedPhotoCount(), photoEntity));
                     } else {
                         vertx.fileSystem().mkdirs(dirPath).onFailure().invoke(e -> log.error(StrUtil.format("downloadComic->创建文件夹失败:[{}]", e.getLocalizedMessage()), e)).subscribe().with(mkdirSucceed -> {
                             if(chapterEntity.updatedAt().after(DateUtil.parse("2020-10-27"))) {

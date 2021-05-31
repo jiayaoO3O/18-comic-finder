@@ -102,8 +102,7 @@ public class TaskService {
                     var urlAndName = StrUtil.split(photo, "\"");
                     var photoEntity = new PhotoEntity(StrUtil.trim(urlAndName[ 1 ]), StrUtil.trim(urlAndName[ 0 ]));
                     photoEntities.add(photoEntity);
-                    this.addPendingPhotoCount();
-                    log.info(StrUtil.format("chapter:[{}]-photo:[{}]-url:[{}]", chapterEntity.name(), photoEntity.name(), photoEntity.url()));
+                    log.info(StrUtil.format("{}:chapter:[{}]-photo:[{}]-url:[{}]", this.addPendingPhotoCount(), chapterEntity.name(), photoEntity.name(), photoEntity.url()));
                 }
             }
             return Multi.createFrom().iterable(photoEntities);
@@ -156,8 +155,7 @@ public class TaskService {
         this.createGet(url).subscribe().with(response -> {
             log.info(StrUtil.format("图片处理->成功下载图片:[{}]", url));
             this.write(photoPath, response.body()).subscribe().with(succeed -> {
-                log.info(StrUtil.format("图片处理->保存文件成功:[{}]", photoPath));
-                this.addProcessedPhotoCount();
+                log.info(StrUtil.format("{}:保存文件成功:[{}]", this.addProcessedPhotoCount(), photoPath));
             });
         });
     }
@@ -197,10 +195,9 @@ public class TaskService {
     public void write(String path, BufferedImage bufferedImage) {
         try(var outputStream = Files.newOutputStream(Path.of(path))) {
             ImageIO.write(bufferedImage, "jpg", outputStream);
-            log.info(StrUtil.format("保存文件->成功:[{}]", path));
-            this.addProcessedPhotoCount();
+            log.info(StrUtil.format("{}:保存文件成功:[{}]", this.addProcessedPhotoCount(), path));
         } catch(IOException e) {
-            log.error(StrUtil.format("保存文件->失败:[{}][{}]", path, e.getLocalizedMessage()), e);
+            log.error(StrUtil.format("{}:保存文件失败:[{}][{}]", this.addProcessedPhotoCount(), path, e.getLocalizedMessage()), e);
         }
     }
 
@@ -214,12 +211,12 @@ public class TaskService {
         return title;
     }
 
-    public void addPendingPhotoCount() {
-        log.info(StrUtil.format("生命周期检测->待处理页数:[{}]", this.pendingPhotoCount.incrementAndGet()));
+    public String addPendingPhotoCount() {
+        return StrUtil.format("生命周期检测->待处理页数:[{}]", this.pendingPhotoCount.incrementAndGet());
     }
 
-    public void addProcessedPhotoCount() {
-        log.info(StrUtil.format("生命周期检测->已处理页数:[{}]", this.processedPhotoCount.decrementAndGet()));
+    public String addProcessedPhotoCount() {
+        return StrUtil.format("生命周期检测->已处理页数:[{}]", this.processedPhotoCount.decrementAndGet());
     }
 
     public boolean exit() {
