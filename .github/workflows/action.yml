@@ -15,8 +15,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - name: 初始化graalVM16
+      - name: 签出代码
+        uses: actions/checkout@v2
+      - name: 初始化graalVM-16
         uses: ayltai/setup-graalvm@v1
         with:
           java-version: 16
@@ -25,9 +26,11 @@ jobs:
       - name: 开始打包
         run: |
           mvn -B clean package -Dmaven.test.skip=true --file pom.xml
+      - name: 开始下载
+        run: |
           cd ./target
           java -jar -Xms1g -Xmx7g ./*.jar
-      - name: 上传结果
+      - name: 开始上传
         uses: actions/upload-artifact@v2.2.2
         with:
           # Artifact name
@@ -38,4 +41,3 @@ jobs:
           if-no-files-found: warn
           # Duration after which artifact will expire in days. 0 means using default retention.Minimum 1 day. Maximum 90 days unless changed from the repository settings page.
           retention-days: 90
-      
