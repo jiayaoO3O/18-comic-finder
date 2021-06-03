@@ -55,6 +55,11 @@ public class TaskService {
 
     AtomicInteger processedPhotoCount = new AtomicInteger(0);
 
+    /**
+     * @param body     漫画首页的html内容.
+     * @param homePage 漫画首页url.
+     * @return 返回一本漫画的所有章节内容.
+     */
     public Multi<ChapterEntity> getChapterInfo(String body, String homePage) {
         var chapterEntities = new ArrayList<ChapterEntity>();
         var host = "https://" + StrUtil.subBetween(homePage, "//", "/");
@@ -87,13 +92,14 @@ public class TaskService {
         return Multi.createFrom().iterable(chapterEntities);
     }
 
+    /**
+     * @param chapterEntity 漫画的某一个章节
+     * @return 该章节对应的所有漫画图片信息
+     */
     public Multi<PhotoEntity> getPhotoInfo(ChapterEntity chapterEntity) {
-        return this.createGet(chapterEntity.url()).onItem().transformToMulti(response -> {
+        return this.post(chapterEntity.url()).onItem().transformToMulti(response -> {
             var photoEntities = new ArrayList<PhotoEntity>();
             var body = response.bodyAsString();
-            if(StrUtil.contains(body, "禁漫娘被你玩壞啦")) {
-                log.info(body);
-            }
             body = StrUtil.subBetween(body, "<div class=\"row thumb-overlay-albums\" style=\"\">", "<div class=\"tab-content");
             var photos = StrUtil.subBetweenAll(body, "data-original=\"", "\" class=");
             for(var photo : photos) {
@@ -102,13 +108,17 @@ public class TaskService {
                     var urlAndName = StrUtil.split(photo, "\"");
                     var photoEntity = new PhotoEntity(StrUtil.trim(urlAndName[ 1 ]), StrUtil.trim(urlAndName[ 0 ]));
                     photoEntities.add(photoEntity);
-                    log.info(StrUtil.format("{}:chapter:[{}]-photo:[{}]-url:[{}]", this.addPendingPhotoCount(), chapterEntity.name(), photoEntity.name(), photoEntity.url()));
+                    log.info(StrUtil.format("{}:chapter:[{}]-photo:[{}]-url:[{}]", this.clickPhotoCounter(true), chapterEntity.name(), photoEntity.name(), photoEntity.url()));
                 }
             }
             return Multi.createFrom().iterable(photoEntities);
         });
     }
 
+    /**
+     * @param photoPath     图片保存的本地路径
+     * @param tempFileTuple 临时文件信息
+     */
     public void process(String photoPath, Uni<Tuple2<String, Buffer>> tempFileTuple) {
         tempFileTuple.subscribe().with(tuple2 -> this.write(tuple2.getItem1(), tuple2.getItem2()).subscribe().with(succeed -> {
             log.info(StrUtil.format("反爬处理->写入buffer到临时文件:[{}]成功", tuple2.getItem1()));
@@ -127,16 +137,27 @@ public class TaskService {
         }));
     }
 
+    /**
+     * 获取漫画和临时文件路径的结合体
+     * 因为函数的返回值只能返回一个对象,想要同时返回一个路径和buffer对象只能组合返回
+     *
+     * @param bufferUni 漫画图片buffer对象
+     * @return 临时文件的路径和漫画buffer对象的结合体
+     */
     public Uni<Tuple2<String, Buffer>> getTempFile(Uni<Buffer> bufferUni) {
         var tempFile = this.createTempFile();
-        tempFile.onFailure(e -> e.getLocalizedMessage().contains("abc")).retry().atMost(3);
         return Uni.combine().all().unis(tempFile, bufferUni).asTuple();
     }
 
+
     /**
-     * 对反爬虫照片进行重新排序
-     * 禁漫天堂对2020-10-27之后的漫画都进行了反爬虫设置,图片顺序会被打乱,需要进行重新切割再组合
+     * 对反爬虫照片进行重新排序.
+     * 禁漫天堂对2020-10-27之后的漫画都进行了反爬虫设置, 图片顺序会被打乱, 需要进行重新切割再组合.
      * 例如https://cdn-msp.18comic.org/media/photos/235900/00028.jpg?v=1613363352
+     * 处理的规则是将图片切割成10份, 然后头尾互相调换位置.
+     *
+     * @param bufferedImage 待反转的图片
+     * @return 已处理的图片
      */
     public BufferedImage reverseImage(@NotNull BufferedImage bufferedImage) {
         int height = bufferedImage.getHeight();
@@ -151,16 +172,26 @@ public class TaskService {
         return result;
     }
 
+    /**
+     * 对不需要反爬虫处理的图片直接进行下载和保存.
+     *
+     * @param url       下载图片链接
+     * @param photoPath 本地保存路径
+     */
     public void getAndSaveImage(String url, String photoPath) {
-        this.createGet(url).subscribe().with(response -> {
+        this.post(url).subscribe().with(response -> {
             log.info(StrUtil.format("图片处理->成功下载图片:[{}]", url));
             this.write(photoPath, response.body()).subscribe().with(succeed -> {
-                log.info(StrUtil.format("{}:保存文件成功:[{}]", this.addProcessedPhotoCount(), photoPath));
+                log.info(StrUtil.format("{}:保存文件成功:[{}]", this.clickPhotoCounter(false), photoPath));
             });
         });
     }
 
-    public Uni<HttpResponse<Buffer>> createGet(String url) {
+    /**
+     * @param url 发送请求的url
+     * @return 请求结果
+     */
+    public Uni<HttpResponse<Buffer>> post(String url) {
         var request = webClient.getAbs(url).port(443).followRedirects(true);
         cookie.ifPresent(cook -> request.putHeader("cookie", cook));
         return request.send().onItem().transform(response -> {
@@ -184,6 +215,11 @@ public class TaskService {
         }).onFailure().retry().withBackOff(Duration.ofSeconds(4L)).atMost(Long.MAX_VALUE).onFailure().invoke(e -> log.error(StrUtil.format("网络请求:[{}]失败:[{}]", url, e.getLocalizedMessage()), e));
     }
 
+    /**
+     * @param path   保存到本地的文件路径
+     * @param buffer 图片对象
+     * @return 写入成功的信息
+     */
     public Uni<Void> write(String path, Buffer buffer) {
         return vertx.fileSystem().writeFile(path, buffer).onFailure().invoke(e -> log.error(StrUtil.format("保存文件:[{}]失败:[{}]", path, e.getLocalizedMessage()), e));
     }
@@ -192,39 +228,67 @@ public class TaskService {
         vertx.fileSystem().delete(path).onFailure().invoke(e -> log.error(StrUtil.format("反爬处理->删除文件:[{}]失败:[{}]", path, e.getLocalizedMessage()), e)).subscribe().with(succeed -> log.info(StrUtil.format("反爬处理->删除临时文件:[{}]", path)));
     }
 
+    /**
+     * @param path          写入文件路径
+     * @param bufferedImage 图片buffer
+     */
     public void write(String path, BufferedImage bufferedImage) {
         try(var outputStream = Files.newOutputStream(Path.of(path))) {
             ImageIO.write(bufferedImage, "jpg", outputStream);
-            log.info(StrUtil.format("{}:保存文件成功:[{}]", this.addProcessedPhotoCount(), path));
+            log.info(StrUtil.format("{}:保存文件成功:[{}]", this.clickPhotoCounter(false), path));
         } catch(IOException e) {
-            log.error(StrUtil.format("{}:保存文件失败:[{}][{}]", this.addProcessedPhotoCount(), path, e.getLocalizedMessage()), e);
+            log.error(StrUtil.format("{}:保存文件失败:[{}][{}]", this.clickPhotoCounter(false), path, e.getLocalizedMessage()), e);
         }
     }
 
+    /**
+     * 如果某一章节的漫画需要反爬处理, 则需要创建一个临时文件来接收需要处理的文件.
+     *
+     * @return 生成临时文件的路径.
+     */
     public Uni<String> createTempFile() {
         return vertx.fileSystem().createTempFile(String.valueOf(System.nanoTime()), ".tmp").onFailure().invoke(e -> log.error(StrUtil.format("反爬处理->创建临时文件失败:[{}]", e.getLocalizedMessage()), e));
     }
 
+    /**
+     * @param body 网页的html内容.
+     * @return 漫画的标题.
+     */
     public String getTitle(String body) {
         String title = StrUtil.subBetween(body, "<h1>", "</h1>");
         title = this.removeIllegalCharacter(title);
         return title;
     }
 
-    public String addPendingPhotoCount() {
-        return StrUtil.format("生命周期检测->待处理页数:[{}]", this.pendingPhotoCount.incrementAndGet());
+    /**
+     * 记录需要处理的图片数目和已经处理的图片数目.
+     * pendingPhotoCount和processedPhotoCount初始值都为0.
+     * 每当有一张图片需要下载, pendingPhotoCount加一;
+     * 每当有一张图片已经处理完成, processedPhotoCount减一;
+     * 到最后, 如果两者相加不为0, 说明还有图片未处理完成, 程序不能结束
+     *
+     * @param produce 是否是待处理的图片, true:图片待处理; false:照片已处理.
+     * @return 返回目前待处理或者已处理的图片数目.
+     */
+    public String clickPhotoCounter(boolean produce) {
+        if(produce) {
+            return StrUtil.format("生命周期检测->待处理页数:[{}]", this.pendingPhotoCount.incrementAndGet());
+
+        } else {
+            return StrUtil.format("生命周期检测->已处理页数:[{}]", this.processedPhotoCount.decrementAndGet());
+        }
     }
 
-    public String addProcessedPhotoCount() {
-        return StrUtil.format("生命周期检测->已处理页数:[{}]", this.processedPhotoCount.decrementAndGet());
-    }
-
+    /**
+     * 前台模式的退出时机检测.
+     * 一个异步程序什么时候能够结束运行是不好判断的, 因为所有的处理都是异步的, 返回了并不代表就已经结束了,
+     * 所以这里的解决方案是间歇性读取日志文件, 如果发现日志文件长时间没有被修改,
+     * 并且pendingPhotoCount和processedPhotoCount相加为0,
+     * 那就说明程序已经完成任务了, 可以停止运行了.
+     *
+     * @return 程序是否应该退出.
+     */
     public boolean exit() {
-        /*
-         前台模式的退出时机检测.
-         一个异步程序什么时候能够结束运行是不好判断的, 因为所有的处理都是异步的, 不一定能够判断什么时候程序执行完成了,
-         所以这里的解决方案是间歇性读取日志文件, 如果发现日志文件长时间没有被修改, 那就说明程序已经完成任务了, 可以停止运行了.
-        */
         var path = Path.of(logPath);
         var compareTo = 0;
         try {
@@ -236,6 +300,13 @@ public class TaskService {
         return compareTo < 0 && this.processedPhotoCount.get() != this.pendingPhotoCount.get() && this.processedPhotoCount.get() != 0 && this.processedPhotoCount.get() + this.pendingPhotoCount.get() == 0;
     }
 
+    /**
+     * github action中的upload插件对含有以下几种字符的文件路径视为非法路径, 会导致上传失败,
+     * 所以当遇到标题有这些非法字符, 替换成横线-.
+     *
+     * @param name 传入的章节标题.
+     * @return 清除非法字符之后的标题.
+     */
     private String removeIllegalCharacter(String name) {
         name = StrUtil.replaceChars(name, new char[]{'/', '\\', ':', '*', '?', '"', '<', '>', '|'}, StrUtil.DASHED);
         name = StrUtil.trim(name);

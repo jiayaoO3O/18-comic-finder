@@ -29,6 +29,10 @@ public class ComicService {
     @Inject
     Vertx vertx;
 
+    /**
+     * @param comicHomePage 漫画首页地址
+     * @param body 漫画首页的html内容
+     */
     public void consume(String comicHomePage, String body) {
         var title = taskService.getTitle(body);
         var chapterEntities = taskService.getChapterInfo(body, comicHomePage);
@@ -39,12 +43,12 @@ public class ComicService {
                 var photoPath = dirPath + File.separatorChar + photoEntity.name();
                 vertx.fileSystem().exists(photoPath).subscribe().with(exists -> {
                     if(exists) {
-                        log.info(StrUtil.format("{}:图片已下载,跳过:[{}]", taskService.addProcessedPhotoCount(), photoEntity));
+                        log.info(StrUtil.format("{}:图片已下载,跳过:[{}]", taskService.clickPhotoCounter(false), photoEntity));
                     } else {
                         vertx.fileSystem().mkdirs(dirPath).onFailure().invoke(e -> log.error(StrUtil.format("downloadComic->创建文件夹失败:[{}]", e.getLocalizedMessage()), e)).subscribe().with(mkdirSucceed -> {
                             if(chapterEntity.updatedAt().after(DateUtil.parse("2020-10-27"))) {
                                 log.info(StrUtil.format("downloadComic->该章节:[{}]图片:[{}]需要进行反反爬虫处理", chapterEntity.name(), photoEntity.name()));
-                                var bufferUni = taskService.createGet(photoEntity.url()).onItem().transform(HttpResponse::body);
+                                var bufferUni = taskService.post(photoEntity.url()).onItem().transform(HttpResponse::body);
                                 var tempFile = taskService.getTempFile(bufferUni);
                                 taskService.process(photoPath, tempFile);
                             } else {
@@ -57,10 +61,14 @@ public class ComicService {
         });
     }
 
+    /**
+     * @param homePage 漫画首页
+     * @return 漫画首页返回的请求体
+     */
     public Uni<String> getComicInfo(String homePage) {
         //如果网页中存在photo字段, 说明传入的链接是某个章节, 而不是漫画首页, 此时需要将photo换成album再访问, 禁漫天堂会自动重定向到该漫画的首页.
-        homePage = StrUtil.contains(homePage, "photo") ? StrUtil.replace(homePage, "photo", "album") : homePage;
-        var homePageUni = taskService.createGet(homePage);
+        homePage = StrUtil.replace(homePage, "photo", "album");
+        var homePageUni = taskService.post(homePage);
         return homePageUni.onItem().transform(HttpResponse::bodyAsString);
     }
 }
