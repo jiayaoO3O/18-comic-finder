@@ -12,18 +12,19 @@ java这门语言能让小项目变成中项目, 中项目变成大项目 🤡
 
 ## 更新记录
 
-- 2021/5/31 10:43 提交3.1.0 release版本.
-- 2021/5/26 15:40 修复由于访问频率过高提示**禁漫娘被你玩壞啦 ??ヽ(??Д`)?? 休息一分鐘後會好**限制访问导致的爬取失败, 禁漫天堂从接口层面加了访问速度限制之后, 下载会不可避免地变慢, 因为每次触发限制都最少要一分钟才能重新访问.
-- 2021/5/15 18:34 周末突然发现禁漫天堂又撤掉了Cloudflare 5秒盾, 程序又能直接通过github action使用了, 不需要添加cookie.
-- **2021/5/9 17:30 由于禁漫天堂最近加了Cloudflare 5秒盾反爬虫, 暂时需要在配置文件中添加cookie才能爬取, 请根据下方说明添加cookie, 后续我看看用什么方法绕过拦截.**
-- 2021/4/13 14:30 添加触发action的限制, 只有修改了downloadPath.json文件才会触发action, 修改其他文件则不触发.
-- 2021/3/27 14:04 v3.0.0 放弃springboot框架, 换成使用响应式框架quarkus, 感觉应该是更快了的.
-- **2021/2/25 15:16 v2.0.0重大更新, 支持直接使用Github Action自动爬取漫画, 不需要本地部署, 直接输入漫画url然后等待Github Action爬取完成然后下载压缩包即可.**
-- 2021/2/18 22:15 v1.2.0支持下载整本只有一章的无章节漫画
-- 2021/2/18 16:35 添加下载单独某个章节的功能.
-- 2021/2/18 14:27 修复保存失败时引发的程序停止运行.
-- 2021/2/18 15:38 确保配置文件中配置为空时程序能够正常识别.
-- 2021/2/17 20:51 修复由于章节列表格式不规范导致的获取章节名称失败.
+|    更新日期     | 更新内容                                                     |
+| :-------------: | ------------------------------------------------------------ |
+| 2021/5/31 10:43 | 提交3.1.0 release版本.                                       |
+| 2021/5/26 15:40 | 修复由于访问频率过高提示**禁漫娘被你玩壞啦 ??ヽ(??Д`)?? 休息一分鐘後會好**限制访问导致的爬取失败, 禁漫天堂从接口层面加了访问速度限制之后, 下载会不可避免地变慢, 因为每次触发限制都最少要一分钟才能重新访问. |
+| 2021/5/15 18:34 | 周末突然发现禁漫天堂又撤掉了Cloudflare 5秒盾, 程序又能直接通过github action使用了, 不需要添加cookie. |
+| 2021/5/9 17:30  | **由于禁漫天堂最近加了Cloudflare 5秒盾反爬虫, 暂时需要在配置文件中添加cookie才能爬取, 请根据下方说明添加cookie, 后续我看看用什么方法绕过拦截.** |
+| 2021/4/13 14:30 | 添加触发action的限制, 只有修改了downloadPath.json文件才会触发action, 修改其他文件则不触发. |
+| 2021/3/27 14:04 | v3.0.0 放弃springboot框架, 换成使用响应式框架quarkus, 感觉应该是更快了的. |
+| 2021/2/25 15:16 | **v2.0.0 重大更新, 支持直接使用Github Action自动爬取漫画, 不需要本地部署, 直接输入漫画url然后等待Github Action爬取完成然后下载压缩包即可.** |
+| 2021/2/18 22:15 | v1.2.0支持下载整本只有一章的无章节漫画                       |
+| 2021/2/18 16:35 | 添加下载单独某个章节的功能.                                  |
+| 2021/2/18 15:38 | 确保配置文件中配置为空时程序能够正常识别.                    |
+| 2021/2/17 20:51 | 修复由于章节列表格式不规范导致的获取章节名称失败.            |
 
 ## Github Action使用方法
 
@@ -40,9 +41,9 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 0. 点击图中fork按钮, fork一份我的项目给你自己.![image.png](https://i.loli.net/2021/02/25/r1EzkUtY4agP3sA.png)
    如果你以前fork过一次, 然后我提交了代码对bug修复, 但是你不懂得如何将我的修复代码合并到你的仓库, 那你可以直接删掉你的仓库, 重新fork一次.
 
-[comment]: <> (1. 进入禁漫天堂的主页, 此时会显示让你等待5秒自动重定向的提示:![image.png]&#40;https://i.loli.net/2021/05/09/jWvEzOuNLM4B7XA.png&#41;过完5秒之后, 浏览器才会正常进入禁漫天堂页面, 此时按F12进入浏览器的控制台模式, 按照下图步骤找到当前网页的cookie,  将红色框cookie冒号后面的内容复制出来.![image.png]&#40;https://i.loli.net/2021/05/09/igAnNTWqp4v8mOJ.png&#41;)
+[comment]: <> "1. 进入禁漫天堂的主页, 此时会显示让你等待5秒自动重定向的提示:![image.png]&#40;https://i.loli.net/2021/05/09/jWvEzOuNLM4B7XA.png&#41;过完5秒之后, 浏览器才会正常进入禁漫天堂页面, 此时按F12进入浏览器的控制台模式, 按照下图步骤找到当前网页的cookie,  将红色框cookie冒号后面的内容复制出来.![image.png]&#40;https://i.loli.net/2021/05/09/igAnNTWqp4v8mOJ.png&#41;"
 
-[comment]: <> (2. 进入`/src/main/resources/application.properties`,点击箭头所指的编辑按钮,对文件进行编辑![image.png]&#40;https://i.loli.net/2021/05/09/qZTihgoCEdQFBUN.png&#41; 只需要改动**comic.request.cookie**这一行, 将刚刚复制的cookie内容粘贴进去, 然后点击提交按钮. ![image.png]&#40;https://i.loli.net/2021/05/09/LpRBsoeHIMYjQm2.png&#41;)
+[comment]: <> "2. 进入`/src/main/resources/application.properties`,点击箭头所指的编辑按钮,对文件进行编辑![image.png]&#40;https://i.loli.net/2021/05/09/qZTihgoCEdQFBUN.png&#41; 只需要改动**comic.request.cookie**这一行, 将刚刚复制的cookie内容粘贴进去, 然后点击提交按钮. ![image.png]&#40;https://i.loli.net/2021/05/09/LpRBsoeHIMYjQm2.png&#41;"
 
 3. 进入`/src/main/resources/downloadPath.json`, 点击箭头所指的编辑按钮,对该文件进行编辑.![image.png](https://i.loli.net/2021/02/25/gxre6j2PVYnl53d.png)
 
@@ -94,7 +95,7 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
     - comic.proxy.host : 科学上网的ip
     - comic.proxy.port : 科学上网的端口
 
-[comment]: <> (    - comic.request.cookie : 禁漫天堂网站的cookie)
+[comment]: <> "    - comic.request.cookie : 禁漫天堂网站的cookie"
 
 ```properties
 comic.download.path=C:\\Users\\jiayao\\Pictures
