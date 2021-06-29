@@ -105,7 +105,7 @@ public class TaskService {
             for(var photo : photos) {
                 if(StrUtil.contains(photo, ".jpg")) {
                     photo = StrUtil.removeAll(photo, " id=\"");
-                    var urlAndName = StrUtil.split(photo, "\"");
+                    var urlAndName = StrUtil.splitToArray(photo, "\"");
                     var photoEntity = new PhotoEntity(StrUtil.trim(urlAndName[ 1 ]), StrUtil.trim(urlAndName[ 0 ]));
                     photoEntities.add(photoEntity);
                     log.info(StrUtil.format("{}:chapter:[{}]-photo:[{}]-url:[{}]", this.clickPhotoCounter(true), chapterEntity.name(), photoEntity.name(), photoEntity.url()));
