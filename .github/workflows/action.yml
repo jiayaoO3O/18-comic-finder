@@ -25,11 +25,11 @@ jobs:
           native-image: true
       - name: 开始打包
         run: |
-          mvn -B clean package -Dmaven.test.skip=true --file pom.xml
+          mvn -B clean package -Dmaven.test.skip=true -Pnative --file pom.xml
       - name: 开始下载
         run: |
           cd ./target
-          java -jar -Xms1g -Xmx7g ./*.jar
+          ./finder-3.0.0-runner
       - name: 开始上传
         uses: actions/upload-artifact@v2.2.2
         with:
