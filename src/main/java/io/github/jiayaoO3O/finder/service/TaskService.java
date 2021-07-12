@@ -66,6 +66,9 @@ public class TaskService {
         if(StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>") == null) {
             //说明该漫画是单章漫画,没有区分章节,例如王者荣耀图鉴类型的https://18comic.vip/album/203961
             var url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", ">開始閱讀<"), "href=\"", "/\"");
+            if(url == null) {
+                 url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", ">開始閱讀<"), "href=\"", "\"");
+            }
             var name = StrUtil.removeAny(StrUtil.splitTrim(this.removeIllegalCharacter(StrUtil.subBetween(body, "<h1>", "</h1>")), " ").toString(), "[", "]", ",");
             var updatedAt = DateUtil.parse(StrUtil.subBetween(StrUtil.subBetween(body, "itemprop=\"datePublished\"", "上架日期"), "content=\"", "\""));
             var chapterEntity = new ChapterEntity(name, host + url, updatedAt);
