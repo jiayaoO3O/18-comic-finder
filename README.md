@@ -51,13 +51,13 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 
 3. 进入`/src/main/resources/downloadPath.json`, 点击箭头所指的编辑按钮,对该文件进行编辑.![image.png](https://i.loli.net/2021/02/25/gxre6j2PVYnl53d.png)
 
-4. 按照json格式填入漫画链接, 如果要下载一本, 那格式为 :
+4. 按照json格式填入漫画链接, 如果要下载一本, 那格式为(注意英文双引号) :
    ```json
    [
      "https://18comic.vip/album/180459/"
    ]
    ```
-   如果要下载两本或者多本, 格式为(注意逗号) :
+   如果要下载两本或者多本, 格式为(注意英文逗号) :
     ```json
     [
       "https://18comic.vip/album/180459/",
