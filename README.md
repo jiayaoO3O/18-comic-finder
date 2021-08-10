@@ -21,7 +21,8 @@ java这门语言能让小项目变成中项目, 中项目变成大项目 🤡
 | 2021/7/01 10:40 | 热烈祝贺我党成立100周年🙌, 希望诸位LSP看漫之余不忘初心牢记使命🎉. |
 | 2021/7/01 10:30 | 同步跟进quarkus框架到2.0.0.Final版本. |
 | 2021/5/31 10:43 | 提交3.1.0 release版本.                                       |
-| 2021/5/26 15:40 | 修复由于访问频率过高提示**禁漫娘被你玩壞啦 ??ヽ(??Д`)?? 休息一分鐘後會好**限制访问导致的爬取失败, 禁漫天堂从接口层面加了访问速度限制之后, 下载会不可避免地变慢, 因为每次触发限制都最少要一分钟才能重新访问. |
+| 2021/5/26 15:40 | 修复由于访问频率过高提示**禁漫娘被你玩壞啦 ??ヽ(??Д`)??
+休息一分鐘後會好**限制访问导致的爬取失败, 禁漫天堂从接口层面加了访问速度限制之后, 下载会不可避免地变慢, 因为每次触发限制都最少要一分钟才能重新访问. |
 | 2021/5/15 18:34 | 周末突然发现禁漫天堂又撤掉了Cloudflare 5秒盾, 程序又能直接通过github action使用了, 不需要添加cookie. |
 | 2021/5/9 17:30  | **由于禁漫天堂最近加了Cloudflare 5秒盾反爬虫, 暂时需要在配置文件中添加cookie才能爬取, 请根据下方说明添加cookie, 后续我看看用什么方法绕过拦截.** |
 | 2021/4/13 14:30 | 添加触发action的限制, 只有修改了downloadPath.json文件才会触发action, 修改其他文件则不触发. |
@@ -51,7 +52,8 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 
 [comment]: <> "2. 进入`/src/main/resources/application.properties`,点击箭头所指的编辑按钮,对文件进行编辑![image.png]&#40;https://i.loli.net/2021/05/09/qZTihgoCEdQFBUN.png&#41; 只需要改动**comic.request.cookie**这一行, 将刚刚复制的cookie内容粘贴进去, 然后点击提交按钮. ![image.png]&#40;https://i.loli.net/2021/05/09/LpRBsoeHIMYjQm2.png&#41;"
 
-3. 进入`/src/main/resources/downloadPath.json`, 点击箭头所指的编辑按钮,对该文件进行编辑.![image.png](https://i.loli.net/2021/02/25/gxre6j2PVYnl53d.png)
+3. 进入`/src/main/resources/downloadPath.json`,
+   点击箭头所指的编辑按钮,对该文件进行编辑.![image.png](https://i.loli.net/2021/02/25/gxre6j2PVYnl53d.png)
 
 4. 按照json格式填入漫画链接, 如果要下载一本, 那格式为(注意英文双引号) :
    ```json

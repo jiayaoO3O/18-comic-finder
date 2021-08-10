@@ -2,7 +2,6 @@ package io.github.jiayaoO3O.finder.runner;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.resource.ClassPathResource;
-import cn.hutool.core.lang.Filter;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
@@ -23,14 +22,13 @@ import java.util.List;
  */
 @QuarkusMain
 public class ComicRunner implements QuarkusApplication {
+    private final List<String> comicHomePages = JSONUtil.toList(new ClassPathResource("downloadPath.json").readUtf8Str(), String.class);
     @Inject
     Logger log;
     @Inject
     ComicService comicService;
     @Inject
     TaskService taskService;
-
-    private final List<String> comicHomePages = JSONUtil.toList(new ClassPathResource("downloadPath.json").readUtf8Str(), String.class);
 
     @Override
     public int run(String... args) {
@@ -40,12 +38,15 @@ public class ComicRunner implements QuarkusApplication {
             Quarkus.waitForExit();
         }
         log.info("前台模式");
-        comicHomePages.addAll(Arrays.stream(ArrayUtil.filter(args, (Filter<String>) arg -> StrUtil.contains(arg, "http"))).toList());
+        comicHomePages.addAll(Arrays.stream(ArrayUtil.filter(args, arg -> StrUtil.contains(arg, "http")))
+                .toList());
         if(CollUtil.isEmpty(comicHomePages)) {
             log.info("下载列表为空,终止任务");
             return 0;
         }
-        comicHomePages.forEach(comicHomePage -> comicService.getComicInfo(comicHomePage).subscribe().with(body -> comicService.consume(comicHomePage, body)));
+        comicHomePages.forEach(comicHomePage -> comicService.getComicInfo(comicHomePage)
+                .subscribe()
+                .with(body -> comicService.consume(comicHomePage, body)));
         while(!taskService.exit()) {
             ThreadUtil.sleep(8000L);
         }
