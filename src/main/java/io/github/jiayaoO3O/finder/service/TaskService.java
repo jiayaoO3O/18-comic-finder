@@ -28,7 +28,7 @@ import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * Created by jiayao on 2021/3/23.
@@ -51,9 +51,9 @@ public class TaskService {
     @Named("webClient")
     WebClient webClient;
 
-    AtomicInteger pendingPhotoCount = new AtomicInteger(0);
+    LongAdder pendingPhotoCount = new LongAdder();
 
-    AtomicInteger processedPhotoCount = new AtomicInteger(0);
+    LongAdder processedPhotoCount = new LongAdder();
 
     /**
      * @param body     漫画首页的html内容.
@@ -313,10 +313,11 @@ public class TaskService {
      */
     public String clickPhotoCounter(boolean produce) {
         if(produce) {
-            return StrUtil.format("生命周期检测->待处理页数:[{}]", this.pendingPhotoCount.incrementAndGet());
-
+            this.pendingPhotoCount.increment();
+            return StrUtil.format("生命周期检测->待处理页数:[{}]", this.pendingPhotoCount.longValue());
         } else {
-            return StrUtil.format("生命周期检测->已处理页数:[{}]", this.processedPhotoCount.decrementAndGet());
+            this.processedPhotoCount.decrement();
+            return StrUtil.format("生命周期检测->已处理页数:[{}]", this.processedPhotoCount.longValue());
         }
     }
 
@@ -338,7 +339,7 @@ public class TaskService {
         } catch(IOException e) {
             log.error(StrUtil.format("生命周期检测->读取日志错误:[{}]", e.getLocalizedMessage()), e);
         }
-        return compareTo < 0 && this.processedPhotoCount.get() != this.pendingPhotoCount.get() && this.processedPhotoCount.get() != 0 && this.processedPhotoCount.get() + this.pendingPhotoCount.get() == 0;
+        return compareTo < 0 && this.processedPhotoCount.longValue() != this.pendingPhotoCount.longValue() && this.processedPhotoCount.longValue() != 0 && this.processedPhotoCount.longValue() + this.pendingPhotoCount.longValue() == 0;
     }
 
     /**
