@@ -178,10 +178,10 @@ public class TaskService {
     public BufferedImage reverseImage(@NotNull BufferedImage bufferedImage) {
         int height = bufferedImage.getHeight();
         int width = bufferedImage.getWidth();
-        int preImgHeight = height / 20;
+        int preImgHeight = height / 10;
         BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D graphics = result.createGraphics();
-        for(int i = 0; i < 20; i++) {
+        for(int i = 0; i < 10; i++) {
             BufferedImage subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, preImgHeight);
             graphics.drawImage(subImage, null, 0, height - (i + 1) * preImgHeight);
         }
