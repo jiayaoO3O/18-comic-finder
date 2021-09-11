@@ -2,6 +2,7 @@ package io.github.jiayaoO3O.finder.service;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.digest.MD5;
 import io.github.jiayaoO3O.finder.entity.ChapterEntity;
 import io.github.jiayaoO3O.finder.entity.PhotoEntity;
 import io.smallrye.common.constraint.NotNull;
@@ -55,6 +56,10 @@ public class TaskService {
 
     LongAdder processedPhotoCount = new LongAdder();
 
+    private static final MD5 MD5 = cn.hutool.crypto.digest.MD5.create();
+
+    private static final int[] rule = new int[]{2, 4, 6, 8, 10, 12, 14, 16, 18, 20};
+
     /**
      * @param body     漫画首页的html内容.
      * @param homePage 漫画首页url.
@@ -72,7 +77,8 @@ public class TaskService {
             var name = StrUtil.removeAny(StrUtil.splitTrim(this.removeIllegalCharacter(StrUtil.subBetween(body, "<h1>", "</h1>")), " ")
                     .toString(), "[", "]", ",");
             var updatedAt = DateUtil.parse(StrUtil.subBetween(StrUtil.subBetween(body, "itemprop=\"datePublished\"", "上架日期"), "content=\"", "\""));
-            var chapterEntity = new ChapterEntity(name, host + url, updatedAt);
+            String id = StrUtil.subAfter(url, '/', true);
+            var chapterEntity = new ChapterEntity(Integer.parseInt(id), name, host + url, updatedAt);
             chapterEntities.add(chapterEntity);
             log.info(chapterEntity.toString());
             return Multi.createFrom()
@@ -92,7 +98,8 @@ public class TaskService {
             var name = StrUtil.removeAny(StrUtil.splitTrim(this.removeIllegalCharacter(nameAndDate[ 0 ]), " ")
                     .toString(), "[", "]", ",");
             var updatedAt = DateUtil.parse(nameAndDate[ nameAndDate.length - 1 ]);
-            var chapterEntity = new ChapterEntity(name, host + url, updatedAt);
+            String id = StrUtil.subAfter(url, '/', true);
+            var chapterEntity = new ChapterEntity(Integer.parseInt(id), name, host + url, updatedAt);
             chapterEntities.add(chapterEntity);
         }
         return Multi.createFrom()
@@ -129,25 +136,27 @@ public class TaskService {
      * @param photoPath     图片保存的本地路径
      * @param tempFileTuple 临时文件信息
      */
-    public void process(String photoPath, Uni<Tuple2<String, Buffer>> tempFileTuple) {
+    public void process(int chapterId, String photoPath, Uni<Tuple2<String, Buffer>> tempFileTuple) {
         tempFileTuple.subscribe()
                 .with(tuple2 -> this.write(tuple2.getItem1(), tuple2.getItem2())
                         .subscribe()
-                        .with(succeed -> {
-                            log.info(StrUtil.format("反爬处理->写入buffer到临时文件:[{}]成功", tuple2.getItem1()));
-                            BufferedImage bufferedImage = null;
-                            try(var inputStream = Files.newInputStream(Path.of(tuple2.getItem1()))) {
-                                bufferedImage = ImageIO.read(inputStream);
-                                if(bufferedImage == null) {
-                                    log.error(StrUtil.format("反爬处理->捕获到bufferedImage为空:[{}],图片路径:[{}]", tuple2.getItem1(), photoPath));
-                                } else {
-                                    this.write(photoPath, this.reverseImage(bufferedImage));
-                                }
-                            } catch(IOException e) {
-                                log.error(StrUtil.format("反爬处理->创建newInputStream失败:[{}]", e.getLocalizedMessage()), e);
-                            }
-                            this.delete(tuple2.getItem1());
-                        }));
+                        .with(succeed -> writePhoto(chapterId,photoPath, tuple2)));
+    }
+
+    private void writePhoto(int chapterId,String photoPath, Tuple2<String, Buffer> tuple2) {
+        log.info(StrUtil.format("反爬处理->写入buffer到临时文件:[{}]成功", tuple2.getItem1()));
+        BufferedImage bufferedImage = null;
+        try(var inputStream = Files.newInputStream(Path.of(tuple2.getItem1()))) {
+            bufferedImage = ImageIO.read(inputStream);
+            if(bufferedImage == null) {
+                log.error(StrUtil.format("反爬处理->捕获到bufferedImage为空:[{}],图片路径:[{}]", tuple2.getItem1(), photoPath));
+            } else {
+                this.write(photoPath, this.reverse(bufferedImage, chapterId,photoPath));
+            }
+        } catch(IOException e) {
+            log.error(StrUtil.format("反爬处理->创建newInputStream失败:[{}]", e.getLocalizedMessage()), e);
+        }
+        this.delete(tuple2.getItem1());
     }
 
     /**
@@ -165,6 +174,17 @@ public class TaskService {
                 .asTuple();
     }
 
+    public BufferedImage reverse(@NotNull BufferedImage bufferedImage, int chapterId, String photoPath) {
+        String photoId = StrUtil.subBetween(photoPath, "photo_", ".jpg");
+        int piece = 10;
+        String md5;
+        if(chapterId >= 268850) {
+            md5 = MD5.digestHex(chapterId + photoId);
+            char c = md5.charAt(md5.length() - 1);
+            piece = rule[ c % 10 ];
+        }
+        return this.reverseImage(bufferedImage, piece);
+    }
 
     /**
      * 对反爬虫照片进行重新排序.
@@ -175,13 +195,13 @@ public class TaskService {
      * @param bufferedImage 待反转的图片
      * @return 已处理的图片
      */
-    public BufferedImage reverseImage(@NotNull BufferedImage bufferedImage) {
+    public BufferedImage reverseImage(BufferedImage bufferedImage, int piece){
         int height = bufferedImage.getHeight();
         int width = bufferedImage.getWidth();
-        int preImgHeight = height / 10;
+        int preImgHeight = height / piece;
         BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D graphics = result.createGraphics();
-        for(int i = 0; i < 10; i++) {
+        for(int i = 0; i < piece; i++) {
             BufferedImage subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, preImgHeight);
             graphics.drawImage(subImage, null, 0, height - (i + 1) * preImgHeight);
         }
