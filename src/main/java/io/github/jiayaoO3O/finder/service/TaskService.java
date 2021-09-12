@@ -140,10 +140,10 @@ public class TaskService {
         tempFileTuple.subscribe()
                 .with(tuple2 -> this.write(tuple2.getItem1(), tuple2.getItem2())
                         .subscribe()
-                        .with(succeed -> writePhoto(chapterId,photoPath, tuple2)));
+                        .with(succeed -> writePhoto(chapterId, photoPath, tuple2)));
     }
 
-    private void writePhoto(int chapterId,String photoPath, Tuple2<String, Buffer> tuple2) {
+    private void writePhoto(int chapterId, String photoPath, Tuple2<String, Buffer> tuple2) {
         log.info(StrUtil.format("反爬处理->写入buffer到临时文件:[{}]成功", tuple2.getItem1()));
         BufferedImage bufferedImage = null;
         try(var inputStream = Files.newInputStream(Path.of(tuple2.getItem1()))) {
@@ -151,7 +151,7 @@ public class TaskService {
             if(bufferedImage == null) {
                 log.error(StrUtil.format("反爬处理->捕获到bufferedImage为空:[{}],图片路径:[{}]", tuple2.getItem1(), photoPath));
             } else {
-                this.write(photoPath, this.reverse(bufferedImage, chapterId,photoPath));
+                this.write(photoPath, this.reverse(bufferedImage, chapterId, photoPath));
             }
         } catch(IOException e) {
             log.error(StrUtil.format("反爬处理->创建newInputStream失败:[{}]", e.getLocalizedMessage()), e);
@@ -175,6 +175,7 @@ public class TaskService {
     }
 
     public BufferedImage reverse(@NotNull BufferedImage bufferedImage, int chapterId, String photoPath) {
+        //禁漫天堂最新的切割算法, 不再固定切割成10份, 而是需要通过chapterId和photoId共同确定分割块数.
         String photoId = StrUtil.subBetween(photoPath, "photo_", ".jpg");
         int piece = 10;
         String md5;
@@ -190,12 +191,12 @@ public class TaskService {
      * 对反爬虫照片进行重新排序.
      * 禁漫天堂对2020-10-27之后的漫画都进行了反爬虫设置, 图片顺序会被打乱, 需要进行重新切割再组合.
      * 例如https://cdn-msp.18comic.org/media/photos/235900/00028.jpg?v=1613363352
-     * 处理的规则是将图片切割成10份, 然后头尾互相调换位置.
      *
      * @param bufferedImage 待反转的图片
+     * @param piece         需要切割的块数
      * @return 已处理的图片
      */
-    public BufferedImage reverseImage(BufferedImage bufferedImage, int piece){
+    public BufferedImage reverseImage(BufferedImage bufferedImage, int piece) {
         int height = bufferedImage.getHeight();
         int width = bufferedImage.getWidth();
         int preImgHeight = height / piece;
