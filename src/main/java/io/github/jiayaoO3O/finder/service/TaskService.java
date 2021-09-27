@@ -256,6 +256,10 @@ public class TaskService {
                         log.error(StrUtil.format("发送请求[{}]->访问受限, 正在进入重试:[Restricted Access!]", url));
                         throw new IllegalStateException("Restricted Access!");
                     }
+                    if(StrUtil.contains(response.bodyAsString(), "Cloudflare")) {
+                        log.error(StrUtil.format("发送请求[{}]->发现cloudflare反爬虫验证, 正在进入重试:[We are checking your browser...]", url));
+                        throw new IllegalStateException("We are checking your browser...");
+                    }
                     return response;
                 })
                 .onFailure()
