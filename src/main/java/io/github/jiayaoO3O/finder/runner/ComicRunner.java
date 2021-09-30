@@ -44,9 +44,9 @@ public class ComicRunner implements QuarkusApplication {
             log.info("下载列表为空,终止任务");
             return 0;
         }
-        comicHomePages.forEach(comicHomePage -> comicService.getComicInfo(comicHomePage)
+        comicHomePages.forEach(url -> comicService.getComicInfo(url)
                 .subscribe()
-                .with(body -> comicService.consume(comicHomePage, body)));
+                .with(body -> comicService.consumeComic(url, body)));
         while(!taskService.exit()) {
             ThreadUtil.sleep(8000L);
         }

@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.MD5;
 import io.github.jiayaoO3O.finder.entity.ChapterEntity;
 import io.github.jiayaoO3O.finder.entity.PhotoEntity;
+import io.quarkus.runtime.Quarkus;
 import io.smallrye.common.constraint.NotNull;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -71,8 +72,12 @@ public class TaskService {
         if(StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>") == null) {
             //说明该漫画是单章漫画,没有区分章节,例如王者荣耀图鉴类型的https://18comic.vip/album/203961
             var url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", ">開始閱讀<"), "href=\"", "/\"");
-            if(url == null) {
+            if(StrUtil.isEmpty(url)) {
                 url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", ">開始閱讀<"), "href=\"", "\"");
+            }
+            if(StrUtil.isEmpty(url)) {
+                log.error(StrUtil.format("获取章节信息失败->解析漫画url为空,程序退出"));
+                Quarkus.asyncExit();
             }
             var name = StrUtil.removeAny(StrUtil.splitTrim(this.removeIllegalCharacter(StrUtil.subBetween(body, "<h1>", "</h1>")), " ")
                     .toString(), "[", "]", ",");
@@ -133,17 +138,15 @@ public class TaskService {
     }
 
     /**
-     * @param photoPath     图片保存的本地路径
      * @param tempFileTuple 临时文件信息
      */
-    public void process(int chapterId, String photoPath, Uni<Tuple2<String, Buffer>> tempFileTuple) {
-        tempFileTuple.subscribe()
-                .with(tuple2 -> this.write(tuple2.getItem1(), tuple2.getItem2())
-                        .subscribe()
-                        .with(succeed -> writePhoto(chapterId, photoPath, tuple2)));
+    public Uni<Tuple2<String, Buffer>> writeTempFile(Tuple2<String, Buffer> tempFileTuple) {
+        return this.write(tempFileTuple.getItem1(), tempFileTuple.getItem2())
+                .chain(result -> Uni.createFrom()
+                        .item(tempFileTuple));
     }
 
-    private void writePhoto(int chapterId, String photoPath, Tuple2<String, Buffer> tuple2) {
+    public void writePhoto(int chapterId, String photoPath, Tuple2<String, Buffer> tuple2) {
         log.info(StrUtil.format("反爬处理->写入buffer到临时文件:[{}]成功", tuple2.getItem1()));
         BufferedImage bufferedImage = null;
         try(var inputStream = Files.newInputStream(Path.of(tuple2.getItem1()))) {
@@ -166,11 +169,12 @@ public class TaskService {
      * @param bufferUni 漫画图片buffer对象
      * @return 临时文件的路径和漫画buffer对象的结合体
      */
-    public Uni<Tuple2<String, Buffer>> getTempFile(Uni<Buffer> bufferUni) {
+    public Uni<Tuple2<String, Buffer>> getTempFile(Buffer bufferUni) {
         var tempFile = this.createTempFile();
         return Uni.combine()
                 .all()
-                .unis(tempFile, bufferUni)
+                .unis(tempFile, Uni.createFrom()
+                        .item(bufferUni))
                 .asTuple();
     }
 
@@ -217,15 +221,10 @@ public class TaskService {
      */
     public void getAndSaveImage(String url, String photoPath) {
         this.post(url)
+                .log(StrUtil.format("图片处理->成功下载图片:[{}]", url))
+                .chain(response -> this.write(photoPath, response.body()))
                 .subscribe()
-                .with(response -> {
-                    log.info(StrUtil.format("图片处理->成功下载图片:[{}]", url));
-                    this.write(photoPath, response.body())
-                            .subscribe()
-                            .with(succeed -> {
-                                log.info(StrUtil.format("{}:保存文件成功:[{}]", this.clickPhotoCounter(false), photoPath));
-                            });
-                });
+                .with(result -> log.info(StrUtil.format("{}:保存文件成功:[{}]", this.clickPhotoCounter(false), photoPath)));
     }
 
     /**
@@ -238,36 +237,36 @@ public class TaskService {
                 .followRedirects(true);
         cookie.ifPresent(cook -> request.putHeader("cookie", cook));
         return request.send()
-                .onItem()
-                .transform(response -> {
-                    if(StrUtil.contains(response.bodyAsString(), "休息一分鐘")) {
-                        log.error(StrUtil.format("发送请求[{}]->访问频率过高导致需要等待, 正在进入重试:[{}]", url, response.bodyAsString()));
-                        throw new IllegalStateException(response.bodyAsString());
-                    }
-                    if(StrUtil.contains(response.bodyAsString(), "Checking your browser before accessing")) {
-                        log.error(StrUtil.format("发送请求[{}]->发现反爬虫五秒盾, 正在进入重试:[Checking your browser before accessing]", url));
-                        throw new IllegalStateException("Checking your browser before accessing");
-                    }
-                    if(StrUtil.contains(response.bodyAsString(), "Please complete the security check to access")) {
-                        log.error(StrUtil.format("发送请求[{}]->发现cloudflare反爬虫验证, 正在进入重试:[Please complete the security check to access]", url));
-                        throw new IllegalStateException("Checking your browser before accessing");
-                    }
-                    if(StrUtil.contains(response.bodyAsString(), "Restricted Access")) {
-                        log.error(StrUtil.format("发送请求[{}]->访问受限, 正在进入重试:[Restricted Access!]", url));
-                        throw new IllegalStateException("Restricted Access!");
-                    }
-                    if(StrUtil.contains(response.bodyAsString(), "Cloudflare")) {
-                        log.error(StrUtil.format("发送请求[{}]->发现cloudflare反爬虫验证, 正在进入重试:[We are checking your browser...]", url));
-                        throw new IllegalStateException("We are checking your browser...");
-                    }
-                    return response;
-                })
+                .chain(response -> this.checkResponseStatus(url, response))
                 .onFailure()
                 .retry()
                 .withBackOff(Duration.ofSeconds(4L))
-                .atMost(Long.MAX_VALUE)
-                .onFailure()
-                .invoke(e -> log.error(StrUtil.format("网络请求:[{}]失败:[{}]", url, e.getLocalizedMessage()), e));
+                .atMost(10);
+    }
+
+    private Uni<HttpResponse<Buffer>> checkResponseStatus(String url, HttpResponse<Buffer> response) {
+        if(StrUtil.contains(response.bodyAsString(), "休息一分鐘")) {
+            log.error(StrUtil.format("发送请求[{}]->访问频率过高导致需要等待, 正在进入重试:[{}]", url, response.bodyAsString()));
+            throw new IllegalStateException(response.bodyAsString());
+        }
+        if(StrUtil.contains(response.bodyAsString(), "Checking your browser before accessing")) {
+            log.error(StrUtil.format("发送请求[{}]->发现反爬虫五秒盾, 正在进入重试:[Checking your browser before accessing]", url));
+            throw new IllegalStateException("Checking your browser before accessing");
+        }
+        if(StrUtil.contains(response.bodyAsString(), "Please complete the security check to access")) {
+            log.error(StrUtil.format("发送请求[{}]->发现cloudflare反爬虫验证, 正在进入重试:[Please complete the security check to access]", url));
+            throw new IllegalStateException("Checking your browser before accessing");
+        }
+        if(StrUtil.contains(response.bodyAsString(), "Restricted Access")) {
+            log.error(StrUtil.format("发送请求[{}]->访问受限, 正在进入重试:[Restricted Access!]", url));
+            throw new IllegalStateException("Restricted Access!");
+        }
+        if(StrUtil.contains(response.bodyAsString(), "Cloudflare")) {
+            log.error(StrUtil.format("发送请求[{}]->发现cloudflare反爬虫验证, 正在进入重试:[We are checking your browser...]", url));
+            throw new IllegalStateException("We are checking your browser...");
+        }
+        return Uni.createFrom()
+                .item(response);
     }
 
     /**
@@ -311,9 +310,7 @@ public class TaskService {
      */
     public Uni<String> createTempFile() {
         return vertx.fileSystem()
-                .createTempFile(String.valueOf(System.nanoTime()), ".tmp")
-                .onFailure()
-                .invoke(e -> log.error(StrUtil.format("反爬处理->创建临时文件失败:[{}]", e.getLocalizedMessage()), e));
+                .createTempFile(String.valueOf(System.nanoTime()), ".tmp");
     }
 
     /**

@@ -41,7 +41,7 @@ public class ComicController {
         }
         comicService.getComicInfo(homePage)
                 .subscribe()
-                .with(body -> comicService.consume(homePage, body));
+                .with(body -> comicService.consumeComic(homePage, body));
         return Uni.createFrom()
                 .item(StrUtil.format("已经添加任务:[{}]", homePage));
     }
