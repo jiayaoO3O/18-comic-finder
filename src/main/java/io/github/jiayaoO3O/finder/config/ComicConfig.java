@@ -1,5 +1,6 @@
 package io.github.jiayaoO3O.finder.config;
 
+import io.vertx.core.http.HttpVersion;
 import io.vertx.core.net.ProxyOptions;
 import io.vertx.core.net.ProxyType;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -37,8 +38,12 @@ public class ComicConfig {
                     .setType(ProxyType.HTTP));
         }
         webClientOptions.setUserAgentEnabled(true);
-        webClientOptions.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4482.0 Safari/537.36 Edg/92.0.878.0");
+        webClientOptions.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36 Hutool");
+        webClientOptions.setProtocolVersion(HttpVersion.HTTP_1_1);
+        webClientOptions.setKeepAlive(true);
+        webClientOptions.setFollowRedirects(true);
         webClientOptions.setVerifyHost(false);
+        webClientOptions.setTrustAll(true);
         webClientOptions.setSsl(true);
         return WebClient.create(vertx, webClientOptions);
     }

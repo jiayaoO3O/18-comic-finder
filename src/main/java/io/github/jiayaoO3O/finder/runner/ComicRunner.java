@@ -8,10 +8,10 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import io.github.jiayaoO3O.finder.service.ComicService;
 import io.github.jiayaoO3O.finder.service.TaskService;
+import io.quarkus.logging.Log;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.QuarkusApplication;
 import io.quarkus.runtime.annotations.QuarkusMain;
-import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
 import java.util.Arrays;
@@ -24,24 +24,22 @@ import java.util.List;
 public class ComicRunner implements QuarkusApplication {
     private final List<String> comicHomePages = JSONUtil.toList(new ClassPathResource("downloadPath.json").readUtf8Str(), String.class);
     @Inject
-    Logger log;
-    @Inject
     ComicService comicService;
     @Inject
     TaskService taskService;
 
     @Override
     public int run(String... args) {
-        log.info("注意身体,适度看漫");
+        Log.info("注意身体,适度看漫");
         if(ArrayUtil.contains(args, "-s")) {
-            log.info("后台模式");
+            Log.info("后台模式");
             Quarkus.waitForExit();
         }
-        log.info("前台模式");
+        Log.info("前台模式");
         comicHomePages.addAll(Arrays.stream(ArrayUtil.filter(args, arg -> StrUtil.contains(arg, "http")))
                 .toList());
         if(CollUtil.isEmpty(comicHomePages)) {
-            log.info("下载列表为空,终止任务");
+            Log.info("下载列表为空,终止任务");
             return 0;
         }
         comicHomePages.forEach(url -> comicService.getComicInfo(url)
@@ -50,7 +48,7 @@ public class ComicRunner implements QuarkusApplication {
         while(!taskService.exit()) {
             ThreadUtil.sleep(8000L);
         }
-        log.info("任务结束,看漫愉快");
+        Log.info("任务结束,看漫愉快");
         return 0;
     }
 }

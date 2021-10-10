@@ -3,10 +3,10 @@ package io.github.jiayaoO3O.finder.service;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import io.github.jiayaoO3O.finder.entity.ChapterEntity;
+import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -22,17 +22,14 @@ public class ComicService {
     String downloadPath;
 
     @Inject
-    Logger log;
-
-    @Inject
     TaskService taskService;
 
     @Inject
     Vertx vertx;
 
     /**
-     * @param url 漫画首页地址
-     * @param body          漫画首页的html内容
+     * @param url  漫画首页地址
+     * @param body 漫画首页的html内容
      */
     public void consumeComic(String url, String body) {
         var title = taskService.getTitle(body);
@@ -47,7 +44,7 @@ public class ComicService {
                 .with(photoEntity -> this.checkPhotoExists(title, chapterEntity.name(), photoEntity.name())
                         .chain(exists -> this.createChapterDir(exists, title, chapterEntity.name(), photoEntity.name()))
                         .subscribe()
-                        .with(result -> this.consumePhoto(chapterEntity.id(), chapterEntity.updatedAt(), chapterEntity.name(), photoEntity.name(), photoEntity.url())));
+                        .with(result -> this.consumePhoto(chapterEntity.id(), title, chapterEntity.updatedAt(), chapterEntity.name(), photoEntity.name(), photoEntity.url())));
     }
 
     private Uni<Boolean> checkPhotoExists(String title, String chapterName, String photoName) {
@@ -60,7 +57,7 @@ public class ComicService {
     private Uni<Void> createChapterDir(boolean exists, String title, String chapterName, String photoName) {
         var dirPath = downloadPath + File.separatorChar + title + File.separatorChar + chapterName;
         if(exists) {
-            log.info(StrUtil.format("{}:图片已下载,跳过:[{}]", taskService.clickPhotoCounter(false), dirPath + File.separatorChar + photoName));
+            Log.info(StrUtil.format("{}:图片已下载,跳过:[{}]", taskService.clickPhotoCounter(false), dirPath + File.separatorChar + photoName));
             return Uni.createFrom()
                     .voidItem();
         } else {
@@ -69,11 +66,11 @@ public class ComicService {
         }
     }
 
-    private void consumePhoto(int chapterId, Date chapterUpdatedAt, String chapterName, String photoName, String photoUrl) {
-        var dirPath = downloadPath + File.separatorChar + photoName + File.separatorChar + chapterName;
+    private void consumePhoto(int chapterId, String title, Date chapterUpdatedAt, String chapterName, String photoName, String photoUrl) {
+        var dirPath = downloadPath + File.separatorChar + title + File.separatorChar + chapterName;
         var photoPath = dirPath + File.separatorChar + photoName;
         if(chapterUpdatedAt.after(DateUtil.parse("2020-10-27"))) {
-            log.info(StrUtil.format("downloadComic->该章节:[{}]图片:[{}]需要进行反反爬虫处理", chapterName, photoName));
+            Log.info(StrUtil.format("downloadComic->该章节:[{}]图片:[{}]需要进行反反爬虫处理", chapterName, photoName));
             taskService.post(photoUrl)
                     .chain(response -> Uni.createFrom()
                             .item(response.body()))
@@ -93,6 +90,8 @@ public class ComicService {
     public Uni<String> getComicInfo(String url) {
         //如果网页中存在photo字段, 说明传入的链接是某个章节, 而不是漫画首页, 此时需要将photo换成album再访问, 禁漫天堂会自动重定向到该漫画的首页.
         url = StrUtil.replace(url, "photo", "album");
-        return taskService.post(url).chain(response->Uni.createFrom().item(response.bodyAsString()));
+        return taskService.post(url)
+                .chain(response -> Uni.createFrom()
+                        .item(response.bodyAsString()));
     }
 }
