@@ -187,7 +187,7 @@ http://localhost:7788/finder/download?homePage=https://18comic.vip/photo/211115
 
 ## TODO
 
-- [] 使用ipfs缓存已经下载过的图片
+- [ ] 使用ipfs缓存已经下载过的图片
 - [x] 支持github action
 - [x] 支持单独下载某个章节而不是每一次都下载完整的一本漫画.
 - [x] 支持下载整本只有一章的无章节漫画.
