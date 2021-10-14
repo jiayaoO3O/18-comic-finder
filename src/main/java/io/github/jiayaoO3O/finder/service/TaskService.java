@@ -3,9 +3,9 @@ package io.github.jiayaoO3O.finder.service;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.MD5;
+import cn.hutool.log.Log;
 import io.github.jiayaoO3O.finder.entity.ChapterEntity;
 import io.github.jiayaoO3O.finder.entity.PhotoEntity;
-import io.quarkus.logging.Log;
 import io.quarkus.runtime.Quarkus;
 import io.smallrye.common.constraint.NotNull;
 import io.smallrye.mutiny.Multi;
@@ -37,6 +37,8 @@ import java.util.concurrent.atomic.LongAdder;
  */
 @ApplicationScoped
 public class TaskService {
+    private static final Log log = Log.get();
+    
     @ConfigProperty(name = "comic.request.cookie")
     Optional<String> cookie;
 
@@ -73,7 +75,7 @@ public class TaskService {
                 url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", ">開始閱讀<"), "href=\"", "\"");
             }
             if(StrUtil.isEmpty(url)) {
-                Log.error(StrUtil.format("获取章节信息失败->解析漫画url为空,程序退出"));
+                log.error(StrUtil.format("获取章节信息失败->解析漫画url为空,程序退出"));
                 Quarkus.asyncExit();
             }
             var name = StrUtil.removeAny(StrUtil.splitTrim(this.removeIllegalCharacter(StrUtil.subBetween(body, "<h1>", "</h1>")), " ")
@@ -82,7 +84,7 @@ public class TaskService {
             String id = StrUtil.subAfter(url, '/', true);
             var chapterEntity = new ChapterEntity(Integer.parseInt(id), name, host + url, updatedAt);
             chapterEntities.add(chapterEntity);
-            Log.info(chapterEntity.toString());
+            log.info(chapterEntity.toString());
             return Multi.createFrom()
                     .iterable(chapterEntities);
         }
@@ -126,7 +128,7 @@ public class TaskService {
                             var urlAndName = StrUtil.splitToArray(photo, "\"");
                             var photoEntity = new PhotoEntity(StrUtil.trim(urlAndName[ 1 ]), StrUtil.trim(urlAndName[ 0 ]));
                             photoEntities.add(photoEntity);
-                            Log.info(StrUtil.format("{}:chapter:[{}]-photo:[{}]-url:[{}]", this.clickPhotoCounter(true), chapterEntity.name(), photoEntity.name(), photoEntity.url()));
+                            log.info(StrUtil.format("{}:chapter:[{}]-photo:[{}]-url:[{}]", this.clickPhotoCounter(true), chapterEntity.name(), photoEntity.name(), photoEntity.url()));
                         }
                     }
                     return Multi.createFrom()
@@ -144,17 +146,17 @@ public class TaskService {
     }
 
     public void writePhoto(int chapterId, String photoPath, Tuple2<String, Buffer> tuple2) {
-        Log.info(StrUtil.format("反爬处理->写入buffer到临时文件:[{}]成功", tuple2.getItem1()));
+        log.info(StrUtil.format("反爬处理->写入buffer到临时文件:[{}]成功", tuple2.getItem1()));
         BufferedImage bufferedImage = null;
         try(var inputStream = Files.newInputStream(Path.of(tuple2.getItem1()))) {
             bufferedImage = ImageIO.read(inputStream);
             if(bufferedImage == null) {
-                Log.error(StrUtil.format("反爬处理->捕获到bufferedImage为空:[{}],图片路径:[{}]", tuple2.getItem1(), photoPath));
+                log.error(StrUtil.format("反爬处理->捕获到bufferedImage为空:[{}],图片路径:[{}]", tuple2.getItem1(), photoPath));
             } else {
                 this.write(photoPath, this.reverse(bufferedImage, chapterId, photoPath));
             }
         } catch(IOException e) {
-            Log.error(StrUtil.format("反爬处理->创建newInputStream失败:[{}]", e.getLocalizedMessage()), e);
+            log.error(StrUtil.format("反爬处理->创建newInputStream失败:[{}]", e.getLocalizedMessage()), e);
         }
         this.delete(tuple2.getItem1());
     }
@@ -221,7 +223,7 @@ public class TaskService {
                 .log(StrUtil.format("图片处理->成功下载图片:[{}]", url))
                 .chain(response -> this.write(photoPath, response.body()))
                 .subscribe()
-                .with(result -> Log.info(StrUtil.format("{}:保存文件成功:[{}]", this.clickPhotoCounter(false), photoPath)));
+                .with(result -> log.info(StrUtil.format("{}:保存文件成功:[{}]", this.clickPhotoCounter(false), photoPath)));
     }
 
     /**
@@ -250,23 +252,23 @@ public class TaskService {
 
     private Uni<HttpResponse<Buffer>> checkResponseStatus(String url, HttpResponse<Buffer> response) {
         if(StrUtil.contains(response.bodyAsString(), "休息一分鐘")) {
-            Log.error(StrUtil.format("发送请求[{}]->访问频率过高导致需要等待, 正在进入重试:[{}]", url, response.bodyAsString()));
+            log.error(StrUtil.format("发送请求[{}]->访问频率过高导致需要等待, 正在进入重试:[{}]", url, response.bodyAsString()));
             throw new IllegalStateException(response.bodyAsString());
         }
         if(StrUtil.contains(response.bodyAsString(), "Checking your browser before accessing")) {
-            Log.error(StrUtil.format("发送请求[{}]->发现反爬虫五秒盾, 正在进入重试:[Checking your browser before accessing]", url));
+            log.error(StrUtil.format("发送请求[{}]->发现反爬虫五秒盾, 正在进入重试:[Checking your browser before accessing]", url));
             throw new IllegalStateException("Checking your browser before accessing");
         }
         if(StrUtil.contains(response.bodyAsString(), "Please complete the security check to access")) {
-            Log.error(StrUtil.format("发送请求[{}]->发现cloudflare反爬虫验证, 正在进入重试:[Please complete the security check to access]", url));
+            log.error(StrUtil.format("发送请求[{}]->发现cloudflare反爬虫验证, 正在进入重试:[Please complete the security check to access]", url));
             throw new IllegalStateException("Checking your browser before accessing");
         }
         if(StrUtil.contains(response.bodyAsString(), "Restricted Access")) {
-            Log.error(StrUtil.format("发送请求[{}]->访问受限, 正在进入重试:[Restricted Access!]", url));
+            log.error(StrUtil.format("发送请求[{}]->访问受限, 正在进入重试:[Restricted Access!]", url));
             throw new IllegalStateException("Restricted Access!");
         }
         if(StrUtil.contains(response.bodyAsString(), "Cloudflare")) {
-            Log.error(StrUtil.format("发送请求[{}]->发现cloudflare反爬虫验证, 正在进入重试:[We are checking your browser...]", url));
+            log.error(StrUtil.format("发送请求[{}]->发现cloudflare反爬虫验证, 正在进入重试:[We are checking your browser...]", url));
             throw new IllegalStateException("We are checking your browser...");
         }
         return Uni.createFrom()
@@ -282,16 +284,16 @@ public class TaskService {
         return vertx.fileSystem()
                 .writeFile(path, buffer)
                 .onFailure()
-                .invoke(e -> Log.error(StrUtil.format("保存文件:[{}]失败:[{}]", path, e.getLocalizedMessage()), e));
+                .invoke(e -> log.error(StrUtil.format("保存文件:[{}]失败:[{}]", path, e.getLocalizedMessage()), e));
     }
 
     public void delete(String path) {
         vertx.fileSystem()
                 .delete(path)
                 .onFailure()
-                .invoke(e -> Log.error(StrUtil.format("反爬处理->删除文件:[{}]失败:[{}]", path, e.getLocalizedMessage()), e))
+                .invoke(e -> log.error(StrUtil.format("反爬处理->删除文件:[{}]失败:[{}]", path, e.getLocalizedMessage()), e))
                 .subscribe()
-                .with(succeed -> Log.info(StrUtil.format("反爬处理->删除临时文件:[{}]", path)));
+                .with(succeed -> log.info(StrUtil.format("反爬处理->删除临时文件:[{}]", path)));
     }
 
     /**
@@ -301,9 +303,9 @@ public class TaskService {
     public void write(String path, BufferedImage bufferedImage) {
         try(var outputStream = Files.newOutputStream(Path.of(path))) {
             ImageIO.write(bufferedImage, "jpg", outputStream);
-            Log.info(StrUtil.format("{}:保存文件成功:[{}]", this.clickPhotoCounter(false), path));
+            log.info(StrUtil.format("{}:保存文件成功:[{}]", this.clickPhotoCounter(false), path));
         } catch(IOException e) {
-            Log.error(StrUtil.format("{}:保存文件失败:[{}][{}]", this.clickPhotoCounter(false), path, e.getLocalizedMessage()), e);
+            log.error(StrUtil.format("{}:保存文件失败:[{}][{}]", this.clickPhotoCounter(false), path, e.getLocalizedMessage()), e);
         }
     }
 
@@ -363,7 +365,7 @@ public class TaskService {
             var lastModifiedTime = Files.getLastModifiedTime(path);
             compareTo = lastModifiedTime.compareTo(FileTime.from(DateUtil.toInstant(DateUtil.offsetSecond(DateUtil.date(), -32))));
         } catch(IOException e) {
-            Log.error(StrUtil.format("生命周期检测->读取日志错误:[{}]", e.getLocalizedMessage()), e);
+            log.error(StrUtil.format("生命周期检测->读取日志错误:[{}]", e.getLocalizedMessage()), e);
         }
         return compareTo < 0 && this.processedPhotoCount.longValue() != this.pendingPhotoCount.longValue() && this.processedPhotoCount.longValue() != 0 && this.processedPhotoCount.longValue() + this.pendingPhotoCount.longValue() == 0;
     }

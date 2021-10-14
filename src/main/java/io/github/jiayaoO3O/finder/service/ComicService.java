@@ -2,8 +2,8 @@ package io.github.jiayaoO3O.finder.service;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.log.Log;
 import io.github.jiayaoO3O.finder.entity.ChapterEntity;
-import io.quarkus.logging.Log;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -18,6 +18,8 @@ import java.util.Date;
  */
 @ApplicationScoped
 public class ComicService {
+    private static final Log log = Log.get();
+
     @ConfigProperty(name = "comic.download.path")
     String downloadPath;
 
@@ -57,7 +59,7 @@ public class ComicService {
     private Uni<Void> createChapterDir(boolean exists, String title, String chapterName, String photoName) {
         var dirPath = downloadPath + File.separatorChar + title + File.separatorChar + chapterName;
         if(exists) {
-            Log.info(StrUtil.format("{}:图片已下载,跳过:[{}]", taskService.clickPhotoCounter(false), dirPath + File.separatorChar + photoName));
+            log.info(StrUtil.format("{}:图片已下载,跳过:[{}]", taskService.clickPhotoCounter(false), dirPath + File.separatorChar + photoName));
             return Uni.createFrom()
                     .voidItem();
         } else {
@@ -70,7 +72,7 @@ public class ComicService {
         var dirPath = downloadPath + File.separatorChar + title + File.separatorChar + chapterName;
         var photoPath = dirPath + File.separatorChar + photoName;
         if(chapterUpdatedAt.after(DateUtil.parse("2020-10-27"))) {
-            Log.info(StrUtil.format("downloadComic->该章节:[{}]图片:[{}]需要进行反反爬虫处理", chapterName, photoName));
+            log.info(StrUtil.format("downloadComic->该章节:[{}]图片:[{}]需要进行反反爬虫处理", chapterName, photoName));
             taskService.post(photoUrl)
                     .chain(response -> Uni.createFrom()
                             .item(response.body()))
