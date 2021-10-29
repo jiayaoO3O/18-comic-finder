@@ -17,15 +17,15 @@ jobs:
     steps:
       - name: 签出代码
         uses: actions/checkout@v2
-      - name: 初始化graalVM-16
+      - name: 初始化GraalVM-17
         uses: ayltai/setup-graalvm@v1
         with:
-          java-version: 16
-          graalvm-version: 21.1.0
-          native-image: true
+          java-version: 17
+          graalvm-version: 21.3.0
+          native-image: false
       - name: 开始打包
         run: |
-          mvn -B clean package -Dmaven.test.skip=true --file pom.xml
+          mvn -B clean package -Dmaven.test.skip=true --file pom.xml -T 4
       - name: 开始下载
         run: |
           cd ./target
