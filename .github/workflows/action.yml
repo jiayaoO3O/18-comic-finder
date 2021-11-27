@@ -66,4 +66,16 @@ jobs:
           release_name: xcx
           draft: false
           prerelease: false
-
+          # 这一步是对上一步发布的release文件的补充，调用github api上传一个apk文件
+      - name: Upload Release Asset
+        id: upload-release-asset 
+        # 只有create_release成功得到输出才继续
+        if: steps.create_release.outputs.upload_url
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./finder-result
+          asset_name: finder-result
+          asset_content_type: application/zip
