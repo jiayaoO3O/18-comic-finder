@@ -6,8 +6,8 @@ name: Java CI with Maven
 on:
   push:
     branches: [ master ]
-    paths:
-      - 'src/main/resources/*.json'
+    #paths:
+    #  - 'src/main/resources/*.json'
 
 jobs:
   build:
@@ -52,6 +52,10 @@ jobs:
         with:
           # Artifact name
           name: finder-result
+      - name: zip files
+        uses: thedoctor0/zip-release@master
+        with: 
+          name: xyjk.zip
       # 发布release，版本号是用户git push的tag里面的版本号，发布的只有代码压缩包（与手动默认发布一致）
       - name: Create Release
         id: create_release
@@ -70,12 +74,11 @@ jobs:
       - name: Upload Release Asset
         id: upload-release-asset 
         # 只有create_release成功得到输出才继续
-        if: steps.create_release.outputs.upload_url
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} 
-          asset_path: ./finder-result
-          asset_name: finder-result
+          asset_path: ./xyjk.zip
+          asset_name: xyjk-1.zip
           asset_content_type: application/zip
