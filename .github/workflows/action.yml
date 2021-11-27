@@ -41,3 +41,29 @@ jobs:
           if-no-files-found: warn
           # Duration after which artifact will expire in days. 0 means using default retention.Minimum 1 day. Maximum 90 days unless changed from the repository settings page.
           retention-days: 90
+  deploy:
+    runs-on: ubuntu-latest
+    name: Upload Release Asset
+    # 依赖上一个job
+    needs: build
+    steps:
+      - name: Download build result for job apk
+        uses: actions/download-artifact@v2
+        with:
+          # Artifact name
+          name: finder-result
+      # 发布release，版本号是用户git push的tag里面的版本号，发布的只有代码压缩包（与手动默认发布一致）
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          # GitHub 会自动创建 GITHUB_TOKEN 密码以在工作流程中使用
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 设置时区，默认是格林尼治时间
+          # TZ: Asia/Shanghai
+        with:
+          tag_name: 1.1.0
+          release_name: xcx
+          draft: false
+          prerelease: false
+
