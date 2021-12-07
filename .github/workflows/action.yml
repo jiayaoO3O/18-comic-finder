@@ -66,8 +66,8 @@ jobs:
           # 设置时区，默认是格林尼治时间
           # TZ: Asia/Shanghai
         with:
-          tag_name: 1.1.0
-          release_name: xcx
+          tag_name: v${{ github.run_number }}
+          release_name: v${{ github.run_number }}
           draft: false
           prerelease: false
           # 这一步是对上一步发布的release文件的补充，调用github api上传一个apk文件
