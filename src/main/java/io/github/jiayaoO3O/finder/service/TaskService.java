@@ -206,8 +206,15 @@ public class TaskService {
         BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D graphics = result.createGraphics();
         for(int i = 0; i < piece; i++) {
-            BufferedImage subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, preImgHeight);
-            graphics.drawImage(subImage, null, 0, height - (i + 1) * preImgHeight);
+            BufferedImage subImage;
+            if(i == piece - 1) {
+                //漫画的高度除以块数时,不一定是整数,此时漫画的第一块高度要算上剩余的像素.
+                subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, height - i * preImgHeight);
+                graphics.drawImage(subImage, null, 0, 0);
+            } else {
+                subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, preImgHeight);
+                graphics.drawImage(subImage, null, 0, height - (i + 1) * preImgHeight);
+            }
         }
         return result;
     }
