@@ -203,6 +203,10 @@ public class TaskService {
         int height = bufferedImage.getHeight();
         int width = bufferedImage.getWidth();
         int preImgHeight = height / piece;
+        if(preImgHeight == 0) {
+            //如果分块后高度不足1像素说明不需要切割, 直接返回即可
+            return bufferedImage;
+        }
         BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D graphics = result.createGraphics();
         for(int i = 0; i < piece; i++) {
