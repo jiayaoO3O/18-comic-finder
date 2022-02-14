@@ -71,17 +71,17 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 
 通过以下步骤即可在GitHub Action上运行程序
 
-0.|
+0. 点击图中fork按钮, fork一份我的项目给你自己.![image.png](https://i.loli.net/2021/02/25/r1EzkUtY4agP3sA.png)
    如果你以前fork过一次, 然后我提交了代码对bug修复, 但是你不懂得如何将我的修复代码合并到你的仓库, 那你可以直接删掉你的仓库, 重新fork一次.
 
-[comment]: <> "1.|
+[comment]: <> "1. 进入禁漫天堂的主页, 此时会显示让你等待5秒自动重定向的提示:![image.png]&#40;https://i.loli.net/2021/05/09/jWvEzOuNLM4B7XA.png&#41;过完5秒之后, 浏览器才会正常进入禁漫天堂页面, 此时按F12进入浏览器的控制台模式, 按照下图步骤找到当前网页的cookie,  将红色框cookie冒号后面的内容复制出来.![image.png]&#40;https://i.loli.net/2021/05/09/igAnNTWqp4v8mOJ.png&#41;"
 
-[comment]: <> "2.|
+[comment]: <> "2. 进入`/src/main/resources/application.properties`,点击箭头所指的编辑按钮,对文件进行编辑![image.png]&#40;https://i.loli.net/2021/05/09/qZTihgoCEdQFBUN.png&#41; 只需要改动**comic.request.cookie**这一行, 将刚刚复制的cookie内容粘贴进去, 然后点击提交按钮. ![image.png]&#40;https://i.loli.net/2021/05/09/LpRBsoeHIMYjQm2.png&#41;"
 
-3.|
+3. 进入`/src/main/resources/downloadPath.json`, 点击箭头所指的编辑按钮,对该文件进行编辑, **注意使用github action模式的时候只需要修改这个json文件,
    其他任何文件都不需要修改.** ![image.png](https://i.loli.net/2021/02/25/gxre6j2PVYnl53d.png)
 
-4.|
+4. 按照json格式填入漫画链接, 如果要下载一本, 那格式为(注意英文双引号) :
    ```json
    [
      "https://18comic.vip/album/180459"
@@ -105,21 +105,21 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 
    ![image.png](https://i.loli.net/2021/02/25/O745iyUbfZvBDSN.png)
 
-5.|
+5. 提交完成之后进入Actions页面查看程序运行状况 :![image.png](https://i.loli.net/2021/02/25/2h4n9q1LuFKCeB6.png)
 
    ![image.png](https://i.loli.net/2021/02/25/BgwedXxFGtThRC9.png)
 
-   绿色说明运行成功, 黄色说明正在运行, 红色说明运行失败.|
+   绿色说明运行成功, 黄色说明正在运行, 红色说明运行失败. 运行成功之后, 点击对应的任务 : ![image.png](https://i.loli.net/2021/02/25/gFdOoTW4vtrU9zS.png)
 
    点击箭头所指的**finder-result**压缩包文件, 即可下载已经打包好的爬虫图片, 注意下载这个压缩包的时间取决于你访问github的速度, 如果没有科学上网可能需要下载很久.
 
 ## 本地打包
 
-1.|
+1. 安装jdk17.
 
-2.|
+2. 安装maven.
 
-3.|
+3. 下载源代码并且修改**application.properties**文件中的以下几个配置 :
 
     - comic.download.path : 下载到本地的目录
     - comic.proxy.host : 科学上网的ip
