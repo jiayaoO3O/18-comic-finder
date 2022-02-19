@@ -79,7 +79,7 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 [comment]: <> "2. 进入`/src/main/resources/application.properties`,点击箭头所指的编辑按钮,对文件进行编辑![image.png]&#40;https://i.loli.net/2021/05/09/qZTihgoCEdQFBUN.png&#41; 只需要改动**comic.request.cookie**这一行, 将刚刚复制的cookie内容粘贴进去, 然后点击提交按钮. ![image.png]&#40;https://i.loli.net/2021/05/09/LpRBsoeHIMYjQm2.png&#41;"
 
 3. 进入`/src/main/resources/downloadPath.json`, 点击箭头所指的编辑按钮,对该文件进行编辑, **注意使用github action模式的时候只需要修改这个json文件,
-   其他任何文件都不需要修改.** ![image.png](https://i.loli.net/2021/02/25/gxre6j2PVYnl53d.png)
+   其他任何文件都不需要修改, 也不要提交pull request到上游来.** ![image.png](https://i.loli.net/2021/02/25/gxre6j2PVYnl53d.png)
 
 4. 按照json格式填入漫画链接, 如果要下载一本, 那格式为(注意英文双引号) :
    ```json
