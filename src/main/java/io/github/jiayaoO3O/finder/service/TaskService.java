@@ -120,7 +120,7 @@ public class TaskService {
                 .transformToMulti(response -> {
                     var photoEntities = new ArrayList<PhotoEntity>();
                     var body = response.bodyAsString();
-                    body = StrUtil.subBetween(body, "<div class=\"row thumb-overlay-albums\" style=\"\">", "<div class=\"tab-content");
+                    body = StrUtil.subBetween(body, "<div class=\"row thumb-overlay-albums\">", "<div class=\"tab-content");
                     var photos = StrUtil.subBetweenAll(body, "data-original=\"", "\" class=");
                     for(var photo : photos) {
                         if(StrUtil.contains(photo, ".jpg")) {
