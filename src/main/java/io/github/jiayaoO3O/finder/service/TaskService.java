@@ -82,7 +82,10 @@ public class TaskService {
                     .toString(), "[", "]", ",");
             var updatedAt = DateUtil.parse(StrUtil.subBetween(StrUtil.subBetween(body, "itemprop=\"datePublished\"", "上架日期"), "content=\"", "\""));
             String id = StrUtil.subAfter(url, '/', true);
-            var chapterEntity = new ChapterEntity(Integer.parseInt(id), StrUtil.replaceChars(name, "","."), host + url, updatedAt);
+            while(StrUtil.endWith(name, '.')) {
+                name = StrUtil.removeSuffix(name, ".");
+            }
+            var chapterEntity = new ChapterEntity(Integer.parseInt(id), name, host + url, updatedAt);
             chapterEntities.add(chapterEntity);
             log.info(chapterEntity.toString());
             return Multi.createFrom()
@@ -103,6 +106,9 @@ public class TaskService {
                     .toString(), "[", "]", ",");
             var updatedAt = DateUtil.parse(nameAndDate[ nameAndDate.length - 1 ]);
             String id = StrUtil.subAfter(url, '/', true);
+            while(StrUtil.endWith(name, '.')) {
+                name = StrUtil.removeSuffix(name, ".");
+            }
             var chapterEntity = new ChapterEntity(Integer.parseInt(id), name, host + url, updatedAt);
             chapterEntities.add(chapterEntity);
         }
