@@ -70,9 +70,9 @@ public class TaskService {
         var host = "https://" + StrUtil.subBetween(homePage, "//", "/");
         if(StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>") == null) {
             //说明该漫画是单章漫画,没有区分章节,例如王者荣耀图鉴类型的https://18comic.vip/album/203961
-            var url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", ">開始閱讀<"), "href=\"", "/\"");
+            var url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", "開始閱讀"), "href=\"", "/\"");
             if(StrUtil.isEmpty(url)) {
-                url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", ">開始閱讀<"), "href=\"", "\"");
+                url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", "開始閱讀"), "href=\"", "\"");
             }
             if(StrUtil.isEmpty(url)) {
                 log.error(StrUtil.format("获取章节信息失败->解析漫画url为空,程序退出"));
