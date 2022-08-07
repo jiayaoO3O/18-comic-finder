@@ -21,7 +21,7 @@ jobs:
         uses: ayltai/setup-graalvm@v1
         with:
           java-version: 17
-          graalvm-version: 22.0.0.2
+          graalvm-version: 22.2.0
           native-image: false
       - name: 开始打包
         run: |
