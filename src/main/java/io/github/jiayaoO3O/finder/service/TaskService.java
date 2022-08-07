@@ -82,7 +82,7 @@ public class TaskService {
                     .toString(), "[", "]", ",");
             var updatedAt = DateUtil.parse(StrUtil.subBetween(StrUtil.subBetween(body, "itemprop=\"datePublished\"", "上架日期"), "content=\"", "\""));
             String id = StrUtil.subAfter(url, '/', true);
-            var chapterEntity = new ChapterEntity(Integer.parseInt(id), name, host + url, updatedAt);
+            var chapterEntity = new ChapterEntity(Integer.parseInt(id), StrUtil.replaceChars(name, "","."), host + url, updatedAt);
             chapterEntities.add(chapterEntity);
             log.info(chapterEntity.toString());
             return Multi.createFrom()
