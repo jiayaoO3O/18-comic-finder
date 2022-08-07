@@ -123,7 +123,7 @@ public class TaskService {
                     body = StrUtil.subBetween(body, "<div class=\"row thumb-overlay-albums\">", "<div class=\"tab-content");
                     var photos = StrUtil.subBetweenAll(body, "data-original=\"", "\" class=");
                     for(var photo : photos) {
-                        if(StrUtil.contains(photo, ".jpg")) {
+                        if(StrUtil.containsAny(photo, ".jpg", ".webp", ".png")) {
                             photo = StrUtil.removeAll(photo, " id=\"");
                             var urlAndName = StrUtil.splitToArray(photo, "\"");
                             var photoEntity = new PhotoEntity(StrUtil.trim(urlAndName[ 1 ]), StrUtil.trim(urlAndName[ 0 ]));
