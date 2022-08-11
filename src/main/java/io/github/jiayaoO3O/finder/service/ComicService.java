@@ -46,7 +46,7 @@ public class ComicService {
                 .with(photoEntity -> this.checkPhotoExists(title, chapterEntity.name(), photoEntity.name())
                         .chain(exists -> this.createChapterDir(exists, title, chapterEntity.name(), photoEntity.name()))
                         .subscribe()
-                        .with(result -> this.consumePhoto(chapterEntity.id(), title, chapterEntity.updatedAt(), chapterEntity.name(), photoEntity.name(), photoEntity.url())));
+                        .with(result -> this.consumePhoto(chapterEntity.id(), title, chapterEntity.name(), photoEntity.name(), photoEntity.url())));
     }
 
     private Uni<Boolean> checkPhotoExists(String title, String chapterName, String photoName) {
@@ -68,21 +68,16 @@ public class ComicService {
         }
     }
 
-    private void consumePhoto(int chapterId, String title, Date chapterUpdatedAt, String chapterName, String photoName, String photoUrl) {
+    private void consumePhoto(int chapterId, String title, String chapterName, String photoName, String photoUrl) {
         var dirPath = downloadPath + File.separatorChar + title + File.separatorChar + chapterName;
         var photoPath = dirPath + File.separatorChar + photoName;
-        if(chapterUpdatedAt.after(DateUtil.parse("2020-10-27"))) {
-            log.info(StrUtil.format("downloadComic->该章节:[{}]图片:[{}]需要进行反反爬虫处理", chapterName, photoName));
-            taskService.post(photoUrl)
-                    .chain(response -> Uni.createFrom()
-                            .item(response.body()))
-                    .chain(taskService::getTempFile)
-                    .chain(taskService::writeTempFile)
-                    .subscribe()
-                    .with(tempFile -> taskService.writePhoto(chapterId, photoPath, tempFile));
-        } else {
-            taskService.getAndSaveImage(photoUrl, photoPath);
-        }
+        taskService.post(photoUrl)
+                .chain(response -> Uni.createFrom()
+                        .item(response.body()))
+                .chain(taskService::getTempFile)
+                .chain(taskService::writeTempFile)
+                .subscribe()
+                .with(tempFile -> taskService.writePhoto(chapterId, photoPath, tempFile));
     }
 
     /**
