@@ -29,9 +29,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -198,8 +197,10 @@ public class TaskService {
             md5 = MD5.digestHex(chapterId + photoId);
             char c = md5.charAt(md5.length() - 1);
             piece = rule[ c % 10 ];
+            return this.reverseImage(bufferedImage, piece, true);
+        } else {
+            return this.reverseImage(bufferedImage, piece, false);
         }
-        return this.reverseImage(bufferedImage, piece);
     }
 
     /**
@@ -211,7 +212,7 @@ public class TaskService {
      * @param piece         需要切割的块数
      * @return 已处理的图片
      */
-    public BufferedImage reverseImage(BufferedImage bufferedImage, int piece) {
+    public BufferedImage reverseImage(BufferedImage bufferedImage, int piece, boolean newRule) {
         if(piece == 1) {
             return bufferedImage;
         }
@@ -222,30 +223,47 @@ public class TaskService {
             //如果分块后高度不足1像素说明不需要切割, 直接返回即可
             return bufferedImage;
         }
-        var firstCheck = this.needReverse(bufferedImage, piece);
-        if(firstCheck < piece / 2) {
-            //第一次检查, 如果不相似数目少于一半, 则判断不用切割, 直接返回
-            return bufferedImage;
-        }
-        BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        Graphics2D graphics = result.createGraphics();
-        for(int i = 0; i < piece; i++) {
-            BufferedImage subImage;
-            if(i == piece - 1) {
-                //漫画的高度除以块数时,不一定是整数,此时漫画的第一块高度要算上剩余的像素.
-                subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, height - i * preImgHeight);
-                graphics.drawImage(subImage, null, 0, 0);
-            } else {
-                subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, preImgHeight);
-                graphics.drawImage(subImage, null, 0, height - (i + 1) * preImgHeight);
+        if(!newRule) {
+            var firstCheck = this.needReverse(bufferedImage, piece);
+            if(firstCheck < piece / 2) {
+                //第一次检查, 如果不相似数目少于一半, 则判断不用切割, 直接返回
+                return bufferedImage;
             }
+            BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D graphics = result.createGraphics();
+            for(int i = 0; i < piece; i++) {
+                BufferedImage subImage;
+                if(i == piece - 1) {
+                    //漫画的高度除以块数时,不一定是整数,此时漫画的第一块高度要算上剩余的像素.
+                    subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, height - i * preImgHeight);
+                    graphics.drawImage(subImage, null, 0, 0);
+                } else {
+                    subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, preImgHeight);
+                    graphics.drawImage(subImage, null, 0, height - (i + 1) * preImgHeight);
+                }
+            }
+            var doubleCheck = this.needReverse(result, piece);
+            if(doubleCheck >= firstCheck) {
+                //切割反转之后, 第二次检查, 如果不相似数目比第一次还多, 说明原本不用切, 切了反而错了
+                return bufferedImage;
+            }
+            return result;
+        } else {
+            BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D graphics = result.createGraphics();
+            for(int i = 0; i < piece; i++) {
+                BufferedImage subImage;
+                if(i == piece - 1) {
+                    //漫画的高度除以块数时,不一定是整数,此时漫画的第一块高度要算上剩余的像素.
+                    subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, height - i * preImgHeight);
+                    graphics.drawImage(subImage, null, 0, 0);
+                } else {
+                    subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, preImgHeight);
+                    graphics.drawImage(subImage, null, 0, height - (i + 1) * preImgHeight);
+                }
+            }
+            return result;
         }
-        var doubleCheck = this.needReverse(result, piece);
-        if(doubleCheck >= firstCheck) {
-            //切割反转之后, 第二次检查, 如果不相似数目比第一次还多, 说明原本不用切, 切了反而错了
-            return bufferedImage;
-        }
-        return result;
     }
 
     /**
