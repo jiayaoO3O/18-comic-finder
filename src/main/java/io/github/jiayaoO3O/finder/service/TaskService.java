@@ -8,9 +8,7 @@ import io.github.jiayaoO3O.finder.entity.ChapterEntity;
 import io.github.jiayaoO3O.finder.entity.PhotoEntity;
 import io.quarkus.runtime.Quarkus;
 import io.smallrye.common.constraint.NotNull;
-import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
@@ -158,8 +156,8 @@ public class TaskService {
                 .item(dirPath));
     }
 
-    public Uni<Boolean> processPhotoExists(String photoPath){
-       return vertx.fileSystem()
+    public Uni<Boolean> processPhotoExists(String photoPath) {
+        return vertx.fileSystem()
                 .exists(photoPath);
     }
 
@@ -170,16 +168,18 @@ public class TaskService {
                         .item(response.bodyAsBuffer()));
     }
 
-    public Uni<String> processPhotoTempFile(Buffer buffer) {
+    public Uni<String> processPhotoTempFile(Buffer buffer, PhotoEntity photoEntity) {
         if(buffer == null) {
-            log.info("buffer为null");
+            log.info("{}[{}]对应buffer为null, 跳过处理", this.clickPhotoCounter(false), photoEntity.url());
+            return Uni.createFrom()
+                    .item("");
         }
         var tempFile = vertx.fileSystem()
                 .createTempFile(String.valueOf(System.nanoTime()), ".tmp");
         var voidUni = tempFile.chain(path -> vertx.fileSystem()
                 .writeFile(path, buffer)
                 .onFailure()
-                .invoke(e -> log.error(StrUtil.format("保存文件:[{}]失败:[{}]", path, e.getLocalizedMessage()), e))
+                .invoke(e -> log.error(StrUtil.format("保存文件:[{}]失败:[{}]", photoEntity.url(), e.getLocalizedMessage()), e))
                 .onItem()
                 .transform(v -> path));
         return voidUni;
@@ -362,6 +362,7 @@ public class TaskService {
             log.error(StrUtil.format("{}保存文件失败:[{}][{}]", this.clickPhotoCounter(false), path, e.getLocalizedMessage()), e);
         }
     }
+
     /**
      * @param body 网页的html内容.
      * @return 漫画的标题.

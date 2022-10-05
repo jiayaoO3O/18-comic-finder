@@ -76,7 +76,7 @@ public class ComicService {
     private Consumer<Boolean> photoExistsConsumer(ChapterEntity chapterEntity, PhotoEntity photoEntity, String photoPath) {
         return exists -> {
             if(exists) {
-                log.info("{}[{}]已存在, 跳过处理",taskService.clickPhotoCounter(false), photoPath);
+                log.info("{}[{}]已存在, 跳过处理", taskService.clickPhotoCounter(false), photoPath);
             } else {
                 var bufferUni = taskService.processPhotoBuffer(photoEntity);
                 bufferUni.subscribe()
@@ -86,16 +86,18 @@ public class ComicService {
     }
 
     private Consumer<Buffer> photoBufferConsumer(ChapterEntity chapterEntity, PhotoEntity photoEntity, String photoPath) {
-        return buffer -> taskService.processPhotoTempFile(buffer)
+        return buffer -> taskService.processPhotoTempFile(buffer, photoEntity)
                 .subscribe()
                 .with(this.tempFileConsumer(chapterEntity, photoEntity, photoPath));
     }
 
     private Consumer<String> tempFileConsumer(ChapterEntity chapterEntity, PhotoEntity photoEntity, String photoPath) {
         return path -> {
-            var bufferedImageUni = taskService.processPhotoReverse(path, chapterEntity, photoEntity);
-            bufferedImageUni.subscribe()
-                    .with(this.finalImageConsumer(photoPath));
+            if(StrUtil.isNotEmpty(path)) {
+                var bufferedImageUni = taskService.processPhotoReverse(path, chapterEntity, photoEntity);
+                bufferedImageUni.subscribe()
+                        .with(this.finalImageConsumer(photoPath));
+            }
         };
     }
 
