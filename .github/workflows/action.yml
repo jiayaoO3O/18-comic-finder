@@ -17,12 +17,11 @@ jobs:
     steps:
       - name: 签出代码
         uses: actions/checkout@v2
-      - name: 初始化GraalVM-17
-        uses: ayltai/setup-graalvm@v1
+      - name: 初始化JDK
+        uses: actions/setup-java@v3.5.1
         with:
-          java-version: 17
-          graalvm-version: 22.2.0
-          native-image: false
+          java-version: '19'
+          distribution: 'temurin'
       - name: 开始打包
         run: |
           mvn -B clean package -Dmaven.test.skip=true --file pom.xml -T 4

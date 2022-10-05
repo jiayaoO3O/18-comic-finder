@@ -46,6 +46,9 @@ public class TaskService {
     @ConfigProperty(name = "quarkus.log.file.path")
     String logPath;
 
+    @ConfigProperty(name = "comic.download.path")
+    String downloadPath;
+
     @Inject
     Vertx vertx;
 
@@ -61,35 +64,33 @@ public class TaskService {
 
     private static final int[] rule = new int[]{2, 4, 6, 8, 10, 12, 14, 16, 18, 20};
 
-    /**
-     * @param body     漫画首页的html内容.
-     * @param homePage 漫画首页url.
-     * @return 返回一本漫画的所有章节内容.
-     */
-    public Multi<ChapterEntity> getChapterInfo(String body, String homePage) {
-        var chapterEntities = new ArrayList<ChapterEntity>();
+    public Uni<List<ChapterEntity>> processChapterInfo(String body, String homePage) {
+        List<ChapterEntity> chapterEntities = new ArrayList<>();
         var host = "https://" + StrUtil.subBetween(homePage, "//", "/");
-        if(StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>") == null) {
+        var isSingleChapter = StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>") == null;
+        if(isSingleChapter) {
             //说明该漫画是单章漫画,没有区分章节,例如王者荣耀图鉴类型的https://18comic.vip/album/203961
             var url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", "開始閱讀"), "href=\"", "/\"");
             if(StrUtil.isEmpty(url)) {
                 url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", "開始閱讀"), "href=\"", "\"");
             }
-            if(StrUtil.isEmpty(url)) {
-                log.error(StrUtil.format("获取章节信息失败->解析漫画url为空,程序退出"));
-                Quarkus.asyncExit();
-            }
+            //获取章节名称
             var name = StrUtil.removeAny(StrUtil.splitTrim(this.removeIllegalCharacter(StrUtil.subBetween(body, "<h1>", "</h1>")), " ")
                     .toString(), "[", "]", ",");
-            String id = StrUtil.subAfter(url, '/', true);
             while(StrUtil.endWith(name, '.')) {
                 name = StrUtil.removeSuffix(name, ".");
             }
+            //获取章节id
+            String id = StrUtil.subAfter(url, '/', true);
+            if(StrUtil.hasEmpty(id, name, url)) {
+                //对于单章漫画, 存在为空的情况直接推出程序了
+                log.error(StrUtil.format("获取章节信息失败->解析漫画url/name/id为空,程序退出"));
+                Quarkus.asyncExit();
+            }
             var chapterEntity = new ChapterEntity(Integer.parseInt(id), name, host + url);
             chapterEntities.add(chapterEntity);
-            log.info(chapterEntity.toString());
-            return Multi.createFrom()
-                    .iterable(chapterEntities);
+            return Uni.createFrom()
+                    .item(chapterEntities);
         }
         body = StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>");
         var chapters = StrUtil.subBetweenAll(body, "<a ", "</li>");
@@ -108,88 +109,109 @@ public class TaskService {
             while(StrUtil.endWith(name, '.')) {
                 name = StrUtil.removeSuffix(name, ".");
             }
+            if(StrUtil.hasEmpty(id, name, url)) {
+                //对于多章漫画, 存在为空数据直接跳过这一章
+                log.error(StrUtil.format("获取章节信息失败->解析漫画url/name/id为空,跳过本章节"));
+                continue;
+            }
             var chapterEntity = new ChapterEntity(Integer.parseInt(id), name, host + url);
             chapterEntities.add(chapterEntity);
         }
-        return Multi.createFrom()
-                .iterable(chapterEntities);
+        return Uni.createFrom()
+                .item(chapterEntities);
     }
 
-    /**
-     * @param chapterEntity 漫画的某一个章节
-     * @return 该章节对应的所有漫画图片信息
-     */
-    public Multi<PhotoEntity> getPhotoInfo(ChapterEntity chapterEntity) {
-        return this.post(chapterEntity.url())
-                .onItem()
-                .transformToMulti(response -> {
-                    var photoEntities = new ArrayList<PhotoEntity>();
-                    var body = response.bodyAsString();
-                    body = StrUtil.subBetween(body, "<div class=\"row thumb-overlay-albums\">", "<div class=\"tab-content");
-                    var photos = StrUtil.subBetweenAll(body, "data-original=\"", "\" class=");
-                    for(var photo : photos) {
-                        if(StrUtil.containsAny(photo, ".jpg", ".webp", ".png")) {
-                            photo = StrUtil.removeAll(photo, " id=\"");
-                            var urlAndName = StrUtil.splitToArray(photo, "\"");
-                            var photoEntity = new PhotoEntity(StrUtil.trim(urlAndName[ 1 ]), StrUtil.trim(urlAndName[ 0 ]));
-                            photoEntities.add(photoEntity);
-                            log.info(StrUtil.format("{}:chapter:[{}]-photo:[{}]-url:[{}]", this.clickPhotoCounter(true), chapterEntity.name(), photoEntity.name(), photoEntity.url()));
-                        }
+
+    public Map<ChapterEntity, Uni<List<PhotoEntity>>> processPhotoInfo(List<ChapterEntity> chapterEntities) {
+        Map<ChapterEntity, Uni<List<PhotoEntity>>> chapterToPhotoMap = new HashMap<>();
+        for(ChapterEntity chapterEntity : chapterEntities) {
+            var responseUni = this.post(chapterEntity.url());
+            var photoEntitiesUni = responseUni.chain(response -> {
+                var statusCode = response.statusCode();
+                var body = response.bodyAsString();
+                body = StrUtil.subBetween(body, "<div class=\"row thumb-overlay-albums\">", "<div class=\"tab-content");
+                var photos = StrUtil.subBetweenAll(body, "data-original=\"", "\" class=");
+                List<PhotoEntity> photoEntities = new ArrayList<>();
+                for(var photo : photos) {
+                    if(StrUtil.containsAny(photo, ".jpg", ".webp", ".png")) {
+                        photo = StrUtil.removeAll(photo, " id=\"");
+                        var urlAndName = StrUtil.splitToArray(photo, "\"");
+                        var photoEntity = new PhotoEntity(StrUtil.trim(urlAndName[ 1 ]), StrUtil.trim(urlAndName[ 0 ]));
+                        photoEntities.add(photoEntity);
+                        log.info(StrUtil.format("{}:chapter:[{}]-photo:[{}]-url:[{}]", this.clickPhotoCounter(true), chapterEntity.name(), photoEntity.name(), photoEntity.url()));
                     }
-                    return Multi.createFrom()
-                            .iterable(photoEntities);
-                });
+                }
+                return Uni.createFrom()
+                        .item(photoEntities);
+            });
+            chapterToPhotoMap.put(chapterEntity, photoEntitiesUni);
+        }
+        return chapterToPhotoMap;
     }
 
-    /**
-     * @param tempFileTuple 临时文件信息
-     */
-    public Uni<Tuple2<String, Buffer>> writeTempFile(Tuple2<String, Buffer> tempFileTuple) {
-        return this.write(tempFileTuple.getItem1(), tempFileTuple.getItem2())
-                .chain(result -> Uni.createFrom()
-                        .item(tempFileTuple));
+    public Uni<String> processChapterDir(String title, ChapterEntity chapterEntity) {
+        var chapterName = chapterEntity.name();
+        var dirPath = downloadPath + File.separatorChar + title + File.separatorChar + chapterName;
+        var voidUni = vertx.fileSystem()
+                .mkdirs(dirPath);
+        return voidUni.chain(v -> Uni.createFrom()
+                .item(dirPath));
     }
 
-    public void writePhoto(int chapterId, String photoPath, Tuple2<String, Buffer> tuple2) {
-        log.info(StrUtil.format("反爬处理->写入buffer到临时文件:[{}]成功", tuple2.getItem1()));
+    public Uni<Boolean> processPhotoExists(String photoPath){
+       return vertx.fileSystem()
+                .exists(photoPath);
+    }
+
+    public Uni<Buffer> processPhotoBuffer(PhotoEntity photoEntity) {
+        var photoUrl = photoEntity.url();
+        return this.post(photoUrl)
+                .chain(response -> Uni.createFrom()
+                        .item(response.bodyAsBuffer()));
+    }
+
+    public Uni<String> processPhotoTempFile(Buffer buffer) {
+        if(buffer == null) {
+            log.info("buffer为null");
+        }
+        var tempFile = vertx.fileSystem()
+                .createTempFile(String.valueOf(System.nanoTime()), ".tmp");
+        var voidUni = tempFile.chain(path -> vertx.fileSystem()
+                .writeFile(path, buffer)
+                .onFailure()
+                .invoke(e -> log.error(StrUtil.format("保存文件:[{}]失败:[{}]", path, e.getLocalizedMessage()), e))
+                .onItem()
+                .transform(v -> path));
+        return voidUni;
+    }
+
+    public Uni<BufferedImage> processPhotoReverse(String tempFilePath, ChapterEntity chapterEntity, PhotoEntity photoEntity) {
         BufferedImage bufferedImage = null;
-        try(var inputStream = Files.newInputStream(Path.of(tuple2.getItem1()))) {
+        var chapterId = chapterEntity.id();
+        var name = photoEntity.name();
+        try(var inputStream = Files.newInputStream(Path.of(tempFilePath))) {
             bufferedImage = ImageIO.read(inputStream);
             if(bufferedImage == null) {
-                log.error(StrUtil.format("反爬处理->捕获到bufferedImage为空:[{}],图片路径:[{}]", tuple2.getItem1(), photoPath));
+                log.error(StrUtil.format("临时文件读取为空:[{}]", tempFilePath));
             } else {
-                this.write(photoPath, this.reverse(bufferedImage, chapterId, photoPath));
+                bufferedImage = this.reverse(bufferedImage, chapterId, name);
             }
         } catch(IOException e) {
             log.error(StrUtil.format("反爬处理->创建newInputStream失败:[{}]", e.getLocalizedMessage()), e);
         }
-        this.delete(tuple2.getItem1());
+        this.delete(tempFilePath);
+        return Uni.createFrom()
+                .item(bufferedImage);
     }
 
-    /**
-     * 获取漫画和临时文件路径的结合体
-     * 因为函数的返回值只能返回一个对象,想要同时返回一个路径和buffer对象只能组合返回
-     *
-     * @param bufferUni 漫画图片buffer对象
-     * @return 临时文件的路径和漫画buffer对象的结合体
-     */
-    public Uni<Tuple2<String, Buffer>> getTempFile(Buffer bufferUni) {
-        var tempFile = this.createTempFile();
-        return Uni.combine()
-                .all()
-                .unis(tempFile, Uni.createFrom()
-                        .item(bufferUni))
-                .asTuple();
-    }
-
-    public BufferedImage reverse(@NotNull BufferedImage bufferedImage, int chapterId, String photoPath) {
+    public BufferedImage reverse(@NotNull BufferedImage bufferedImage, int chapterId, String photoName) {
         //禁漫天堂最新的切割算法, 不再固定切割成10份, 而是需要通过chapterId和photoId共同确定分割块数.
         String photoId = "";
-        if(photoPath.endsWith(".jpg")) {
-            photoId = StrUtil.subBetween(photoPath, "photo_", ".jpg");
+        if(photoName.endsWith(".jpg")) {
+            photoId = StrUtil.subBetween(photoName, "photo_", ".jpg");
         }
-        if(photoPath.endsWith(".webp")) {
-            photoId = StrUtil.subBetween(photoPath, "photo_", ".webp");
+        if(photoName.endsWith(".webp")) {
+            photoId = StrUtil.subBetween(photoName, "photo_", ".webp");
         }
         int piece = 10;
         String md5;
@@ -315,25 +337,14 @@ public class TaskService {
                 .item(response);
     }
 
-    /**
-     * @param path   保存到本地的文件路径
-     * @param buffer 图片对象
-     * @return 写入成功的信息
-     */
-    public Uni<Void> write(String path, Buffer buffer) {
-        return vertx.fileSystem()
-                .writeFile(path, buffer)
-                .onFailure()
-                .invoke(e -> log.error(StrUtil.format("保存文件:[{}]失败:[{}]", path, e.getLocalizedMessage()), e));
-    }
 
     public void delete(String path) {
         vertx.fileSystem()
                 .delete(path)
                 .onFailure()
-                .invoke(e -> log.error(StrUtil.format("反爬处理->删除文件:[{}]失败:[{}]", path, e.getLocalizedMessage()), e))
+                .invoke(e -> log.error(StrUtil.format("🗑️:[{}]删除临时文件失败:[{}]", path, e.getLocalizedMessage()), e))
                 .subscribe()
-                .with(succeed -> log.info(StrUtil.format("反爬处理->删除临时文件:[{}]", path)));
+                .with(succeed -> log.info(StrUtil.format("🗑️:[{}]删除临时文件成功", path)));
     }
 
     /**
@@ -341,24 +352,16 @@ public class TaskService {
      * @param bufferedImage 图片buffer
      */
     public void write(String path, BufferedImage bufferedImage) {
+        if(bufferedImage == null) {
+            return;
+        }
         try(var outputStream = Files.newOutputStream(Path.of(path))) {
             ImageIO.write(bufferedImage, "jpg", outputStream);
-            log.info(StrUtil.format("{}:保存文件成功:[{}]", this.clickPhotoCounter(false), path));
+            log.info(StrUtil.format("{}保存文件成功:[{}]", this.clickPhotoCounter(false), path));
         } catch(IOException e) {
-            log.error(StrUtil.format("{}:保存文件失败:[{}][{}]", this.clickPhotoCounter(false), path, e.getLocalizedMessage()), e);
+            log.error(StrUtil.format("{}保存文件失败:[{}][{}]", this.clickPhotoCounter(false), path, e.getLocalizedMessage()), e);
         }
     }
-
-    /**
-     * 如果某一章节的漫画需要反爬处理, 则需要创建一个临时文件来接收需要处理的文件.
-     *
-     * @return 生成临时文件的路径.
-     */
-    public Uni<String> createTempFile() {
-        return vertx.fileSystem()
-                .createTempFile(String.valueOf(System.nanoTime()), ".tmp");
-    }
-
     /**
      * @param body 网页的html内容.
      * @return 漫画的标题.
@@ -382,10 +385,10 @@ public class TaskService {
     public String clickPhotoCounter(boolean produce) {
         if(produce) {
             this.pendingPhotoCount.increment();
-            return StrUtil.format("生命周期检测->待处理页数:[{}]", this.pendingPhotoCount.longValue());
+            return StrUtil.format("🧻:[{}]->", this.pendingPhotoCount.longValue());
         } else {
             this.processedPhotoCount.decrement();
-            return StrUtil.format("生命周期检测->已处理页数:[{}]", this.processedPhotoCount.longValue());
+            return StrUtil.format("👌:[{}]->", this.processedPhotoCount.longValue());
         }
     }
 
@@ -398,7 +401,7 @@ public class TaskService {
      *
      * @return 程序是否应该退出.
      */
-    public boolean exit() {
+    public boolean processExit() {
         var path = Path.of(logPath);
         var compareTo = 0;
         try {
