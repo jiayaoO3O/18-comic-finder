@@ -406,11 +406,11 @@ public class TaskService {
         var compareTo = 0;
         try {
             var lastModifiedTime = Files.getLastModifiedTime(path);
-            compareTo = lastModifiedTime.compareTo(FileTime.from(DateUtil.toInstant(DateUtil.offsetSecond(DateUtil.date(), -32))));
+            compareTo = lastModifiedTime.compareTo(FileTime.from(DateUtil.toInstant(DateUtil.offsetSecond(DateUtil.date(), -60))));
         } catch(IOException e) {
             log.error(StrUtil.format("生命周期检测->读取日志错误:[{}]", e.getLocalizedMessage()), e);
         }
-        return compareTo < 0 && this.processedPhotoCount.longValue() != this.pendingPhotoCount.longValue() && this.processedPhotoCount.longValue() != 0 && this.processedPhotoCount.longValue() + this.pendingPhotoCount.longValue() <= 10;
+        return compareTo < 0;
     }
 
     /**
