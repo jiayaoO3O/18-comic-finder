@@ -125,7 +125,6 @@ public class TaskService {
         for(ChapterEntity chapterEntity : chapterEntities) {
             var responseUni = this.post(chapterEntity.url());
             var photoEntitiesUni = responseUni.chain(response -> {
-                var statusCode = response.statusCode();
                 var body = response.bodyAsString();
                 body = StrUtil.subBetween(body, "<div class=\"row thumb-overlay-albums\">", "<div class=\"tab-content");
                 var photos = StrUtil.subBetweenAll(body, "data-original=\"", "\" class=");
@@ -139,12 +138,41 @@ public class TaskService {
                         log.info(StrUtil.format("{}:chapter:[{}]-photo:[{}]-url:[{}]", this.clickPhotoCounter(true), chapterEntity.name(), photoEntity.name(), photoEntity.url()));
                     }
                 }
+                photoEntities = this.processPhotoPagination(body, chapterEntity, photoEntities);
                 return Uni.createFrom()
                         .item(photoEntities);
             });
             chapterToPhotoMap.put(chapterEntity, photoEntitiesUni);
         }
         return chapterToPhotoMap;
+    }
+
+    private List<PhotoEntity> processPhotoPagination(String body, ChapterEntity chapterEntity, List<PhotoEntity> photoEntities) {
+        //禁漫天堂网页一页最多显示300张图片, 某些漫画例如https://18comic.vip/photo/140709可能单章超过300所以需要处理分页
+        var size = photoEntities.size();
+        if(StrUtil.contains(body, "pagination")) {
+            var pageInfo = StrUtil.subBetween(body, "<ul class=\"pagination\">", "prevnext");
+            var pages = StrUtil.subBetweenAll(pageInfo, "<a href=\"", "\">");
+            var pageCount = pages.length;
+            while(pageCount > 0) {
+                var lastPhotoEntity = photoEntities.get(photoEntities.size() - 1);
+                var name = lastPhotoEntity.name();
+                var url = lastPhotoEntity.url();
+                for(int i = 0; i < size; i++) {
+                    var oldIndex = StrUtil.subBetween(name, "photo_", ".");
+                    var newIndex = StrUtil.fillBefore(Integer.parseInt(oldIndex) + 1 + "", '0', 5);
+                    name = StrUtil.replace(name, oldIndex, newIndex);
+                    oldIndex = StrUtil.subAfter(StrUtil.subBetween(url, "photos/", "."), "/", true);
+                    newIndex = StrUtil.fillBefore(Integer.parseInt(oldIndex) + 1 + "", '0', 5);
+                    url = StrUtil.replace(url, oldIndex, newIndex);
+                    PhotoEntity photoEntity = new PhotoEntity(name, url);
+                    photoEntities.add(photoEntity);
+                    log.info(StrUtil.format("{}:chapter:[{}]-photo:[{}]-url:[{}]", this.clickPhotoCounter(true), chapterEntity.name(), photoEntity.name(), photoEntity.url()));
+                }
+                pageCount--;
+            }
+        }
+        return photoEntities;
     }
 
     public Uni<String> processChapterDir(String title, ChapterEntity chapterEntity) {
