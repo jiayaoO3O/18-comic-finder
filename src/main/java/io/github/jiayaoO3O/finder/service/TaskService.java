@@ -29,6 +29,8 @@ import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -53,6 +55,8 @@ public class TaskService {
     @Inject
     @Named("webClient")
     WebClient webClient;
+
+    ConcurrentMap<Integer, Boolean> chapterReverseJudgeMap = new ConcurrentHashMap<>();
 
     LongAdder pendingPhotoCount = new LongAdder();
 
@@ -81,7 +85,7 @@ public class TaskService {
             //获取章节id
             String id = StrUtil.subAfter(url, '/', true);
             if(StrUtil.hasEmpty(id, name, url)) {
-                //对于单章漫画, 存在为空的情况直接推出程序了
+                //对于单章漫画, 存在为空的情况直接退出程序了
                 log.error(StrUtil.format("获取章节信息失败->解析漫画url/name/id为空,程序退出"));
                 Quarkus.asyncExit();
             }
@@ -247,9 +251,16 @@ public class TaskService {
             md5 = MD5.digestHex(chapterId + photoId);
             char c = md5.charAt(md5.length() - 1);
             piece = rule[ c % 10 ];
-            return this.reverseImage(bufferedImage, piece, true);
+            chapterReverseJudgeMap.put(chapterId, true);
+            return this.reverseImage(bufferedImage, chapterId, piece, true);
         } else {
-            return this.reverseImage(bufferedImage, piece, false);
+            //添加一个章节是否需要切割的裁决map, 因为按照目前观察, 对于同一章里面, 要么全部需要切割, 要么全部不需要,
+            //所以当判断到某一张图片需要切割之后, 可以断定整章都需要切割
+            var needReverse = chapterReverseJudgeMap.getOrDefault(chapterId, false);
+            if(needReverse) {
+                return this.reverseImage(bufferedImage, chapterId, piece, true);
+            }
+            return this.reverseImage(bufferedImage, chapterId, piece, false);
         }
     }
 
@@ -262,7 +273,7 @@ public class TaskService {
      * @param piece         需要切割的块数
      * @return 已处理的图片
      */
-    public BufferedImage reverseImage(BufferedImage bufferedImage, int piece, boolean newRule) {
+    public BufferedImage reverseImage(BufferedImage bufferedImage, int chapterId, int piece, boolean newRule) {
         if(piece == 1) {
             return bufferedImage;
         }
@@ -275,10 +286,6 @@ public class TaskService {
         }
         if(!newRule) {
             var firstCheck = this.needReverse(bufferedImage, piece);
-            if(firstCheck < piece / 2) {
-                //第一次检查, 如果不相似数目少于一半, 则判断不用切割, 直接返回
-                return bufferedImage;
-            }
             BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             Graphics2D graphics = result.createGraphics();
             for(int i = 0; i < piece; i++) {
@@ -297,6 +304,8 @@ public class TaskService {
                 //切割反转之后, 第二次检查, 如果不相似数目比第一次还多, 说明原本不用切, 切了反而错了
                 return bufferedImage;
             }
+            //经过两次判断, 图片需要切割之后, 则判断整章需要切割
+            chapterReverseJudgeMap.put(chapterId, true);
             return result;
         } else {
             BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);

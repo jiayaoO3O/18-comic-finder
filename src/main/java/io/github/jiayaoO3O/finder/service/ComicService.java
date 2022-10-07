@@ -1,5 +1,7 @@
 package io.github.jiayaoO3O.finder.service;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.log.Log;
 import io.github.jiayaoO3O.finder.entity.ChapterEntity;
@@ -12,8 +14,10 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.ToIntFunction;
 
 /**
  * Created by jiayao on 2021/3/23.
@@ -64,6 +68,9 @@ public class ComicService {
 
     private Consumer<List<PhotoEntity>> photoEntitiesConsumer(ChapterEntity chapterEntity, String chapterDir) {
         return photoEntities -> {
+            //由于后续需要用某一张图来判断整章漫画是否需要切割, 所以photoEntities不能够按顺序排列, 因为漫画开头的第一第二张图片,
+            //经常是封面, 有大片留白, 对相似度算法有相当大的影响
+            photoEntities = CollUtil.sort(photoEntities, Comparator.comparingInt(photo -> RandomUtil.randomInt(2048)));
             for(PhotoEntity photoEntity : photoEntities) {
                 var photoPath = chapterDir + File.separatorChar + photoEntity.name();
                 var booleanUni = taskService.processPhotoExists(photoPath);
