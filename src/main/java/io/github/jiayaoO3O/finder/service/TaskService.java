@@ -56,8 +56,6 @@ public class TaskService {
     @Named("webClient")
     WebClient webClient;
 
-    ConcurrentMap<Integer, Boolean> chapterReverseJudgeMap = new ConcurrentHashMap<>();
-
     LongAdder pendingPhotoCount = new LongAdder();
 
     LongAdder processedPhotoCount = new LongAdder();
@@ -238,30 +236,24 @@ public class TaskService {
 
     public BufferedImage reverse(@NotNull BufferedImage bufferedImage, int chapterId, String photoName) {
         //禁漫天堂最新的切割算法, 不再固定切割成10份, 而是需要通过chapterId和photoId共同确定分割块数.
-        String photoId = "";
-        if(photoName.endsWith(".jpg")) {
-            photoId = StrUtil.subBetween(photoName, "photo_", ".jpg");
-        }
-        if(photoName.endsWith(".webp")) {
-            photoId = StrUtil.subBetween(photoName, "photo_", ".webp");
+        if(chapterId <= 220971) {
+            log.info("✖️:[{}]小于220971, [{}]不需要切割", chapterId, photoName);
+            return bufferedImage;
         }
         int piece = 10;
-        String md5;
         if(chapterId >= 268850) {
-            md5 = MD5.digestHex(chapterId + photoId);
+            String photoId = "";
+            if(photoName.endsWith(".jpg")) {
+                photoId = StrUtil.subBetween(photoName, "photo_", ".jpg");
+            }
+            if(photoName.endsWith(".webp")) {
+                photoId = StrUtil.subBetween(photoName, "photo_", ".webp");
+            }
+            String md5 = MD5.digestHex(chapterId + photoId);
             char c = md5.charAt(md5.length() - 1);
             piece = rule[ c % 10 ];
-            chapterReverseJudgeMap.put(chapterId, true);
-            return this.reverseImage(bufferedImage, chapterId, piece, true);
-        } else {
-            //添加一个章节是否需要切割的裁决map, 因为按照目前观察, 对于同一章里面, 要么全部需要切割, 要么全部不需要,
-            //所以当判断到某一张图片需要切割之后, 可以断定整章都需要切割
-            var needReverse = chapterReverseJudgeMap.getOrDefault(chapterId, false);
-            if(needReverse) {
-                return this.reverseImage(bufferedImage, chapterId, piece, true);
-            }
-            return this.reverseImage(bufferedImage, chapterId, piece, false);
         }
+        return this.reverseImage(bufferedImage, chapterId, piece);
     }
 
     /**
@@ -273,7 +265,7 @@ public class TaskService {
      * @param piece         需要切割的块数
      * @return 已处理的图片
      */
-    public BufferedImage reverseImage(BufferedImage bufferedImage, int chapterId, int piece, boolean newRule) {
+    public BufferedImage reverseImage(BufferedImage bufferedImage, int chapterId, int piece) {
         if(piece == 1) {
             return bufferedImage;
         }
@@ -284,45 +276,20 @@ public class TaskService {
             //如果分块后高度不足1像素说明不需要切割, 直接返回即可
             return bufferedImage;
         }
-        if(!newRule) {
-            var firstCheck = this.needReverse(bufferedImage, piece);
-            BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            Graphics2D graphics = result.createGraphics();
-            for(int i = 0; i < piece; i++) {
-                BufferedImage subImage;
-                if(i == piece - 1) {
-                    //漫画的高度除以块数时,不一定是整数,此时漫画的第一块高度要算上剩余的像素.
-                    subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, height - i * preImgHeight);
-                    graphics.drawImage(subImage, null, 0, 0);
-                } else {
-                    subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, preImgHeight);
-                    graphics.drawImage(subImage, null, 0, height - (i + 1) * preImgHeight);
-                }
+        BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = result.createGraphics();
+        for(int i = 0; i < piece; i++) {
+            BufferedImage subImage;
+            if(i == piece - 1) {
+                //漫画的高度除以块数时,不一定是整数,此时漫画的第一块高度要算上剩余的像素.
+                subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, height - i * preImgHeight);
+                graphics.drawImage(subImage, null, 0, 0);
+            } else {
+                subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, preImgHeight);
+                graphics.drawImage(subImage, null, 0, height - (i + 1) * preImgHeight);
             }
-            var doubleCheck = this.needReverse(result, piece);
-            if(doubleCheck >= firstCheck) {
-                //切割反转之后, 第二次检查, 如果不相似数目比第一次还多, 说明原本不用切, 切了反而错了
-                return bufferedImage;
-            }
-            //经过两次判断, 图片需要切割之后, 则判断整章需要切割
-            chapterReverseJudgeMap.put(chapterId, true);
-            return result;
-        } else {
-            BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            Graphics2D graphics = result.createGraphics();
-            for(int i = 0; i < piece; i++) {
-                BufferedImage subImage;
-                if(i == piece - 1) {
-                    //漫画的高度除以块数时,不一定是整数,此时漫画的第一块高度要算上剩余的像素.
-                    subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, height - i * preImgHeight);
-                    graphics.drawImage(subImage, null, 0, 0);
-                } else {
-                    subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, preImgHeight);
-                    graphics.drawImage(subImage, null, 0, height - (i + 1) * preImgHeight);
-                }
-            }
-            return result;
         }
+        return result;
     }
 
     /**
@@ -462,104 +429,5 @@ public class TaskService {
         name = StrUtil.replaceChars(name, new char[]{'/', '\\', ':', '*', '?', '"', '<', '>', '|'}, StrUtil.DASHED);
         name = StrUtil.trim(name);
         return name;
-    }
-
-    /**
-     * 判断当页漫画是否需要切割
-     * 先将漫画分块切割, 然后取前一块漫画块的最后一行像素, 与下一块漫画块的第一行像素, 进行相似度判断
-     * 如果有超过一半数目的漫画块相似, 则判断为当页漫画各个块为连续, 不需要切割组合;
-     * 如果有超过一半数目的漫画块不相似, 则判断为需要倒转重新组合
-     *
-     * @param bufferedImage 源图像
-     * @param piece         切割块数
-     * @return
-     */
-    public int needReverse(BufferedImage bufferedImage, int piece) {
-        int height = bufferedImage.getHeight();
-        int width = bufferedImage.getWidth();
-        int preImgHeight = height / piece;
-        List<BufferedImage> list = new ArrayList<>();
-        for(int i = 0; i < piece; i++) {
-            BufferedImage subImage;
-            if(i == piece - 1) {
-                //漫画的高度除以块数时,不一定是整数,此时漫画的第一块高度要算上剩余的像素.
-                subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, height - i * preImgHeight);
-                list.add(subImage);
-            } else {
-                subImage = bufferedImage.getSubimage(0, i * preImgHeight, width, preImgHeight);
-                list.add(subImage);
-            }
-        }
-        int result = 0;
-        for(int i = 0; i < list.size() - 1; i++) {
-            var firstBlock = list.get(i);
-            var secondBlock = list.get(i + 1);
-            var firstPixelLine = firstBlock.getSubimage(0, firstBlock.getHeight() - 1, width, 1);
-            var secondPixelLine = secondBlock.getSubimage(0, 0, width, 1);
-            String firstPixelLineCode = this.similarityDetection(firstPixelLine);
-            String secondPixelLineCode = this.similarityDetection(secondPixelLine);
-            char[] ch1 = firstPixelLineCode.toCharArray();
-            char[] ch2 = secondPixelLineCode.toCharArray();
-            int diffCount = 0;
-            for(int k = 0; k < ch1.length - 1; k++) {
-                if(ch1[ k ] != ch2[ k ]) {
-                    //计算两者的汉明距离
-                    diffCount++;
-                }
-            }
-            if(diffCount > 16) {
-                //按照经验, 如果两个漫画块连续, 则一般相差数目不会超过16
-                result++;
-            }
-        }
-        return result;
-    }
-
-    /**
-     * 使用差异值哈希算法判断图像的相似度
-     *
-     * @param src 源图像
-     * @return 对应的图像指纹
-     */
-    private String similarityDetection(BufferedImage src) {
-        int width = src.getWidth();
-        //高度固定为1像素
-        int height = src.getHeight();
-        //每间隔10像素抽取一个像素作为判断, 例如漫画宽度700则每隔10像素取一个点, 共70个点
-        int pic = width / 10;
-        int[][] ints = new int[ height ][ pic ];
-        for(int i = 0; i < height; i++) {
-            for(int j = 0; j < pic; j++) {
-                int pixel = src.getRGB(j * 10, i);
-                int gray = this.gray(pixel);
-                ints[ i ][ j ] = gray;
-            }
-        }
-        StringBuffer res = new StringBuffer();
-        for(int i = 0; i < height; i++) {
-            for(int j = 0; j < pic - 1; j++) {
-                if(ints[ i ][ j ] >= ints[ i ][ j + 1 ]) {
-                    res.append("1");
-                } else {
-                    res.append("0");
-                }
-            }
-        }
-        return res.toString();
-    }
-
-    /**
-     * rgb-灰度转换
-     *
-     * @param rgb rgb值
-     * @return 灰度值
-     */
-    private int gray(int rgb) {
-        int a = rgb & 0xff000000;
-        int r = (rgb >> 16) & 0xff;
-        int g = (rgb >> 8) & 0xff;
-        int b = rgb & 0xff;
-        rgb = (r * 77 + g * 151 + b * 28) >> 8;
-        return a | (rgb << 16) | (rgb << 8) | rgb;
     }
 }
