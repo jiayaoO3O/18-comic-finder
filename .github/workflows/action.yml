@@ -40,8 +40,6 @@ jobs:
           if-no-files-found: warn
           # Duration after which artifact will expire in days. 0 means using default retention.Minimum 1 day. Maximum 90 days unless changed from the repository settings page.
           retention-days: 90
-      - name: 下载构建
-        uses: actions/download-artifact@v3.0.0
       - name: 自动释放
         uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
@@ -50,4 +48,4 @@ jobs:
           prerelease: true
           title: "finder-result"
           files: |
-           /home/runner/work/18-comic-finder/18-comic-finder/finder-result
+           /home/runner/work/finder
