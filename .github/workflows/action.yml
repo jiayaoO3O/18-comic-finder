@@ -50,4 +50,4 @@ jobs:
           prerelease: true
           title: "finder-result"
           files: |
-           finder-result/*
+           /home/runner/work/18-comic-finder/18-comic-finder/finder-result
