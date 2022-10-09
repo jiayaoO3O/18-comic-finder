@@ -50,4 +50,4 @@ jobs:
           prerelease: true
           title: "finder-result"
           files: |
-           artifacts/*
+           finder-result/*
