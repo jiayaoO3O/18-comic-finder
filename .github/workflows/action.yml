@@ -30,17 +30,13 @@ jobs:
           cd ./target
           java -jar -Xms1g -Xmx7g ./*.jar
           7z a -r "/home/runner/work/finder/finder-result.zip" "/home/runner/work/finder"
-      - name: 开始上传
-        uses: actions/upload-artifact@v2.2.2
-        with:
-          # Artifact name
-          name: finder-result
-          # A file, directory or wildcard pattern that describes what to upload
-          path: /home/runner/work/finder
-          # The desired behavior if no files are found using the provided path.
-          if-no-files-found: warn
-          # Duration after which artifact will expire in days. 0 means using default retention.Minimum 1 day. Maximum 90 days unless changed from the repository settings page.
-          retention-days: 1
+#       - name: 开始上传
+#         uses: actions/upload-artifact@v2.2.2
+#         with:
+#           name: finder-result
+#           path: /home/runner/work/finder
+#           if-no-files-found: warn.
+#           retention-days: 1
       - name: 自动释放
         uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
