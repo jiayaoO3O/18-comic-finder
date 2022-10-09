@@ -29,6 +29,7 @@ jobs:
         run: |
           cd ./target
           java -jar -Xms1g -Xmx7g ./*.jar
+          7z a -r "/home/runner/work/finder/finder-result.zip" "/home/runner/work/finder"
       - name: 开始上传
         uses: actions/upload-artifact@v2.2.2
         with:
@@ -48,4 +49,4 @@ jobs:
           prerelease: true
           title: "finder-result"
           files: |
-           /home/runner/work/finder
+           /home/runner/work/finder/finder-result.zip
