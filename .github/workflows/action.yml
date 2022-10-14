@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: 签出代码
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.5.0
       - name: 初始化JDK
         uses: actions/setup-java@v3.5.1
         with:
@@ -30,7 +30,7 @@ jobs:
           cd ./target
           java -jar -Xms1g -Xmx7g ./*.jar
       - name: 开始上传
-        uses: actions/upload-artifact@v2.2.2
+        uses: actions/upload-artifact@v3.1.0
         with:
           # Artifact name
           name: finder-result
