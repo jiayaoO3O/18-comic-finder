@@ -5,7 +5,7 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ master ]
+    branches: [ dev ]
     paths:
       - 'src/main/resources/*.json'
 
@@ -29,7 +29,14 @@ jobs:
         run: |
           cd ./target
           java -jar -Xms1g -Xmx7g ./*.jar
-          7z a -r "/home/runner/work/finder/finder-result.zip" "/home/runner/work/finder/"
+          7z a -r "/home/runner/work/finder/finder-result.zip" "/home/runner/work/finder/*"
+#       - name: 开始上传
+#         uses: actions/upload-artifact@v2.2.2
+#         with:
+#           name: finder-result
+#           path: /home/runner/work/finder
+#           if-no-files-found: warn.
+#           retention-days: 1
       - name: 自动释放
         uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
