@@ -5,7 +5,13 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ dev ]
+    branches:
+      - master
+      - dev
+      - des
+      - dea
+      - dew
+      - deq
     paths:
       - 'src/main/resources/*.json'
 
