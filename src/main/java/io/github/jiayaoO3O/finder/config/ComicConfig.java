@@ -38,8 +38,9 @@ public class ComicConfig {
                     .setType(ProxyType.HTTP));
         }
         webClientOptions.setUserAgentEnabled(true);
-        webClientOptions.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36 Hutool");
+        webClientOptions.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 Edg/107.0.1418.26");
         webClientOptions.setProtocolVersion(HttpVersion.HTTP_1_1);
+        webClientOptions.addEnabledSecureTransportProtocol("TLSv1.3");
         webClientOptions.setKeepAlive(true);
         webClientOptions.setFollowRedirects(true);
         webClientOptions.setVerifyHost(false);

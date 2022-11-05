@@ -299,7 +299,7 @@ public class TaskService {
     public Uni<HttpResponse<Buffer>> post(String url) {
         var request = webClient.getAbs(url)
                 .port(443)
-                .putHeader("Accept", "text/html,application/xhtml+xml,application/xml")
+                .putHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9")
                 .putHeader("Accept-Encoding", "deflate")
                 .putHeader("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6")
                 .putHeader("Refer", url)
@@ -308,7 +308,7 @@ public class TaskService {
                 .putHeader("upgrade-insecure-requests", " 1")
                 .putHeader("pragma", " no-cache");
         //cookie.ifPresent(cook -> request.putHeader("cookie", cook));
-        return request.send()
+        return request.send().log()
                 .chain(response -> this.checkResponseStatus(url, response))
                 .onFailure()
                 .retry()
