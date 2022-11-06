@@ -110,14 +110,14 @@ Github Action是微软收购github之后推出的CI/CD工具, 你可以理解为
 4. 按照json格式填入漫画链接, 如果要下载一本, 那格式为(注意英文双引号) :
    ```json
    [
-     "https://18comic.vip/album/180459"
+     "https://18comic.org/album/180459"
    ]
    ```
    如果要下载两本或者多本, 格式为(注意英文逗号) :
     ```json
     [
-      "https://18comic.vip/album/180459",
-      "https://18comic.vip/album/182168"
+      "https://18comic.org/album/180459",
+      "https://18comic.org/album/182168"
     ]
     ```
 
@@ -176,7 +176,7 @@ comic.proxy.port=10808
 
 ```json
 [
-  "https://18comic.vip/album/180459/"
+  "https://18comic.org/album/180459/"
 ]
 ```
 
@@ -184,8 +184,8 @@ comic.proxy.port=10808
 
  ```json
 [
-  "https://18comic.vip/album/180459/",
-  "https://18comic.vip/album/182168"
+  "https://18comic.org/album/180459/",
+  "https://18comic.org/album/182168"
 ]
  ```
 
@@ -196,7 +196,7 @@ comic.proxy.port=10808
 
 如果没有条件打包程序, 但是有条件运行程序, 例如只装了jdk19但是没有安装maven等, 那就直接下载我提供的jar包, 按照前面说所方法在jar包所在的目录新建一个config文件夹,
 在里面新建一个application.properties文件, 粘贴并且修改上述几个参数, 然后命令行进入jar所在的目录, 执行`java -jar ./*.jar 漫画路径1 漫画路径2`
-,例如 `java -jar ./*.jar https://18comic.vip/album/180459` , 这时候这本漫画就会被下载, 多本漫画请用空格隔开.
+,例如 `java -jar ./*.jar https://18comic.org/album/180459` , 这时候这本漫画就会被下载, 多本漫画请用空格隔开.
 
 ### 后台模式
 
@@ -214,13 +214,13 @@ http://localhost:7788/finder/download?homePage=你想要下载的漫画主页
 即可开始下载整本漫画, 例如
 
 ```url
-http://localhost:7788/finder/download?homePage=https://18comic.vip/album/177680
+http://localhost:7788/finder/download?homePage=https://18comic.org/album/177680
 ```
 
 如果想要下载单独的某一个章节, 只需要输入对应的章节主页即可, 例如
 
 ```url
-http://localhost:7788/finder/download?homePage=https://18comic.vip/photo/211115
+http://localhost:7788/finder/download?homePage=https://18comic.org/photo/211115
 ```
 
 ## 项目特点
