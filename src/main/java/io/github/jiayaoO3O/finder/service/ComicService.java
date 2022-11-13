@@ -1,17 +1,23 @@
 package io.github.jiayaoO3O.finder.service;
 
-import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.log.Log;
 import io.github.jiayaoO3O.finder.entity.ChapterEntity;
+import io.github.jiayaoO3O.finder.entity.PhotoEntity;
 import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.core.Vertx;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import io.vertx.mutiny.core.buffer.Buffer;
+import io.vertx.mutiny.ext.web.client.HttpResponse;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.Date;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.ToIntFunction;
 
 /**
  * Created by jiayao on 2021/3/23.
@@ -20,75 +26,89 @@ import java.util.Date;
 public class ComicService {
     private static final Log log = Log.get();
 
-    @ConfigProperty(name = "comic.download.path")
-    String downloadPath;
-
     @Inject
     TaskService taskService;
 
-    @Inject
-    Vertx vertx;
 
-    /**
-     * @param url  漫画首页地址
-     * @param body 漫画首页的html内容
-     */
-    public void consumeComic(String url, String body) {
-        var title = taskService.getTitle(body);
-        var chapterEntities = taskService.getChapterInfo(body, url);
-        chapterEntities.subscribe()
-                .with(chapterEntity -> consumeChapter(title, chapterEntity));
-    }
-
-    private void consumeChapter(String title, ChapterEntity chapterEntity) {
-        var photoEntities = taskService.getPhotoInfo(chapterEntity);
-        photoEntities.subscribe()
-                .with(photoEntity -> this.checkPhotoExists(title, chapterEntity.name(), photoEntity.name())
-                        .chain(exists -> this.createChapterDir(exists, title, chapterEntity.name(), photoEntity.name()))
-                        .subscribe()
-                        .with(result -> this.consumePhoto(chapterEntity.id(), title, chapterEntity.name(), photoEntity.name(), photoEntity.url())));
-    }
-
-    private Uni<Boolean> checkPhotoExists(String title, String chapterName, String photoName) {
-        var dirPath = downloadPath + File.separatorChar + title + File.separatorChar + chapterName;
-        var photoPath = dirPath + File.separatorChar + photoName;
-        return vertx.fileSystem()
-                .exists(photoPath);
-    }
-
-    private Uni<Void> createChapterDir(boolean exists, String title, String chapterName, String photoName) {
-        var dirPath = downloadPath + File.separatorChar + title + File.separatorChar + chapterName;
-        if(exists) {
-            log.info(StrUtil.format("{}:图片已下载,跳过:[{}]", taskService.clickPhotoCounter(false), dirPath + File.separatorChar + photoName));
-            return Uni.createFrom()
-                    .voidItem();
-        } else {
-            return vertx.fileSystem()
-                    .mkdirs(dirPath);
-        }
-    }
-
-    private void consumePhoto(int chapterId, String title, String chapterName, String photoName, String photoUrl) {
-        var dirPath = downloadPath + File.separatorChar + title + File.separatorChar + chapterName;
-        var photoPath = dirPath + File.separatorChar + photoName;
-        taskService.post(photoUrl)
-                .chain(response -> Uni.createFrom()
-                        .item(response.body()))
-                .chain(taskService::getTempFile)
-                .chain(taskService::writeTempFile)
-                .subscribe()
-                .with(tempFile -> taskService.writePhoto(chapterId, photoPath, tempFile));
-    }
-
-    /**
-     * @param url 漫画首页
-     * @return 漫画首页返回的请求体
-     */
-    public Uni<String> getComicInfo(String url) {
+    public void processComic(String homePage) {
         //如果网页中存在photo字段, 说明传入的链接是某个章节, 而不是漫画首页, 此时需要将photo换成album再访问, 禁漫天堂会自动重定向到该漫画的首页.
-        url = StrUtil.replace(url, "photo", "album");
-        return taskService.post(url)
-                .chain(response -> Uni.createFrom()
-                        .item(response.bodyAsString()));
+        String url = StrUtil.replace(homePage, "photo", "album");
+        taskService.post(url)
+                .subscribe()
+                .with(this.homePageConsumer(homePage));
+    }
+
+    private Consumer<HttpResponse<Buffer>> homePageConsumer(String url) {
+        return response -> {
+            var body = response.bodyAsString();
+            var title = taskService.getTitle(body);
+            var chapterEntitiesUni = taskService.processChapterInfo(body, url);
+            chapterEntitiesUni.subscribe()
+                    .with(this.photoEntitiesConsumer(title));
+        };
+    }
+
+    private Consumer<List<ChapterEntity>> photoEntitiesConsumer(String title) {
+        return chapterEntities -> {
+            var chapterEntityUniMap = taskService.processPhotoInfo(chapterEntities);
+            for(var chapterEntityUniEntry : chapterEntityUniMap.entrySet()) {
+                var chapterEntity = chapterEntityUniEntry.getKey();
+                var photoEntitiesUni = chapterEntityUniEntry.getValue();
+                var chapterDirUni = taskService.processChapterDir(title, chapterEntity);
+                chapterDirUni.subscribe()
+                        .with(this.chapterDirConsumer(chapterEntity, photoEntitiesUni));
+            }
+        };
+    }
+
+    private Consumer<String> chapterDirConsumer(ChapterEntity chapterEntity, Uni<List<PhotoEntity>> photoEntitiesUni) {
+        return chapterDir -> photoEntitiesUni.subscribe()
+                .with(this.photoEntitiesConsumer(chapterEntity, chapterDir));
+    }
+
+    private Consumer<List<PhotoEntity>> photoEntitiesConsumer(ChapterEntity chapterEntity, String chapterDir) {
+        return photoEntities -> {
+            //由于后续需要用某一张图来判断整章漫画是否需要切割, 所以photoEntities不能够按顺序排列, 因为漫画开头的第一第二张图片,
+            //经常是封面, 有大片留白, 对相似度算法有相当大的影响
+            photoEntities = CollUtil.sort(photoEntities, Comparator.comparingInt(photo -> RandomUtil.randomInt(2048)));
+            for(PhotoEntity photoEntity : photoEntities) {
+                var photoPath = chapterDir + File.separatorChar + photoEntity.name();
+                var booleanUni = taskService.processPhotoExists(photoPath);
+                booleanUni.subscribe()
+                        .with(this.photoExistsConsumer(chapterEntity, photoEntity, photoPath));
+            }
+        };
+    }
+
+    private Consumer<Boolean> photoExistsConsumer(ChapterEntity chapterEntity, PhotoEntity photoEntity, String photoPath) {
+        return exists -> {
+            if(exists) {
+                log.info("{}[{}]已存在, 跳过处理", taskService.clickPhotoCounter(false), photoPath);
+            } else {
+                var bufferUni = taskService.processPhotoBuffer(photoEntity);
+                bufferUni.subscribe()
+                        .with(this.photoBufferConsumer(chapterEntity, photoEntity, photoPath));
+            }
+        };
+    }
+
+    private Consumer<Buffer> photoBufferConsumer(ChapterEntity chapterEntity, PhotoEntity photoEntity, String photoPath) {
+        return buffer -> taskService.processPhotoTempFile(buffer, photoEntity)
+                .subscribe()
+                .with(this.tempFileConsumer(chapterEntity, photoEntity, photoPath));
+    }
+
+    private Consumer<String> tempFileConsumer(ChapterEntity chapterEntity, PhotoEntity photoEntity, String photoPath) {
+        return path -> {
+            if(StrUtil.isNotEmpty(path)) {
+                var bufferedImageUni = taskService.processPhotoReverse(path, chapterEntity, photoEntity);
+                bufferedImageUni.subscribe()
+                        .with(this.finalImageConsumer(photoPath));
+            }
+        };
+    }
+
+    private Consumer<BufferedImage> finalImageConsumer(String photoPath) {
+        return bufferedImage -> taskService.write(photoPath, bufferedImage);
     }
 }

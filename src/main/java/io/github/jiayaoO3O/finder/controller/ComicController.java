@@ -7,10 +7,7 @@ import io.github.jiayaoO3O.finder.service.ComicService;
 import io.smallrye.mutiny.Uni;
 
 import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -37,9 +34,7 @@ public class ComicController {
             return Uni.createFrom()
                     .item(StrUtil.format("homePage参数:[{}]并非http或https链接", homePage));
         }
-        comicService.getComicInfo(homePage)
-                .subscribe()
-                .with(body -> comicService.consumeComic(homePage, body));
+        comicService.processComic(homePage);
         return Uni.createFrom()
                 .item(StrUtil.format("已经添加任务:[{}]", homePage));
     }
