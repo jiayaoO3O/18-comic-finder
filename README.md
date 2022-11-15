@@ -23,6 +23,8 @@ java这门语言能让小项目变成中项目, 中项目变成大项目 🤡
 
 |       更新日期       | 更新内容 |
 |:----------------:|:-----------------|
+| 2022/11/15 17:00  | **支持直接将.webp格式转换为.jpg格式, 以免腾不出手的各位每次都双击打开下一张.**|
+| 2022/11/15 17:00  | 同步跟进quarkus框架到3.0.0.Alpha1版本.|
 | 2022/11/05 21:00  | 修复由于不支持TLSv1.3导致握手失败问题.|
 | 2022/10/25 11:00  | 同步跟进quarkus框架到2.13.3.Final版本.|
 | 2022/10/13 17:00  | 同步跟进quarkus框架到2.13.2.Final版本.|
@@ -245,3 +247,4 @@ http://localhost:7788/finder/download?homePage=https://18comic.vip/photo/211115
 
 - [@lizongcong](https://github.com/lizongcong) : 提供了只有更新json文件才会触发action的建议.
 - [@calject](https://github.com/calject) : 提供了新版禁漫天堂前端切割算法.
+- [@Yiyi-philosophy](https://github.com/Yiyi-philosophy) : 提供了直接将.webp转换为.jpg的建议.
