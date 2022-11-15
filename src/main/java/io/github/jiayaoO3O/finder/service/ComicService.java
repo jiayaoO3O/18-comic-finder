@@ -9,9 +9,8 @@ import io.github.jiayaoO3O.finder.entity.PhotoEntity;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Comparator;
@@ -72,7 +71,7 @@ public class ComicService {
             //经常是封面, 有大片留白, 对相似度算法有相当大的影响
             photoEntities = CollUtil.sort(photoEntities, Comparator.comparingInt(photo -> RandomUtil.randomInt(2048)));
             for(PhotoEntity photoEntity : photoEntities) {
-                var photoPath = chapterDir + File.separatorChar + photoEntity.name();
+                var photoPath = chapterDir + File.separatorChar + StrUtil.replace(photoEntity.name(), ".webp", ".jpg");
                 var booleanUni = taskService.processPhotoExists(photoPath);
                 booleanUni.subscribe()
                         .with(this.photoExistsConsumer(chapterEntity, photoEntity, photoPath));
