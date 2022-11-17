@@ -13,12 +13,12 @@ import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.imageio.ImageIO;
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -29,8 +29,6 @@ import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -69,7 +67,7 @@ public class TaskService {
         var host = "https://" + StrUtil.subBetween(homePage, "//", "/");
         var isSingleChapter = StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>") == null;
         if(isSingleChapter) {
-            //说明该漫画是单章漫画,没有区分章节,例如王者荣耀图鉴类型的https://18comic.vip/album/203961
+            //说明该漫画是单章漫画,没有区分章节,例如王者荣耀图鉴类型的https://18comic.org/album/203961
             var url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", "開始閱讀"), "href=\"", "/\"");
             if(StrUtil.isEmpty(url)) {
                 url = StrUtil.subBetween(StrUtil.subBetween(body, ">收藏<", "開始閱讀"), "href=\"", "\"");
@@ -150,7 +148,7 @@ public class TaskService {
     }
 
     private List<PhotoEntity> processPhotoPagination(String body, ChapterEntity chapterEntity, List<PhotoEntity> photoEntities) {
-        //禁漫天堂网页一页最多显示300张图片, 某些漫画例如https://18comic.vip/photo/140709可能单章超过300所以需要处理分页
+        //禁漫天堂网页一页最多显示300张图片, 某些漫画例如https://18comic.org/photo/140709可能单章超过300所以需要处理分页
         var size = photoEntities.size();
         if(StrUtil.contains(body, "pagination")) {
             var pageInfo = StrUtil.subBetween(body, "<ul class=\"pagination\">", "prevnext");
