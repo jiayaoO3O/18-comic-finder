@@ -13,12 +13,12 @@ import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.imageio.ImageIO;
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -29,8 +29,6 @@ import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -299,7 +297,7 @@ public class TaskService {
     public Uni<HttpResponse<Buffer>> post(String url) {
         var request = webClient.getAbs(url)
                 .port(443)
-                .putHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9")
+                .putHeader("Accept", "text/html,application/xhtml+xml,application/xml")
                 .putHeader("Accept-Encoding", "deflate")
                 .putHeader("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6")
                 .putHeader("Refer", url)

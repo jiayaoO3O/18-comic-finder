@@ -5,10 +5,13 @@ import cn.hutool.http.HttpUtil;
 import cn.hutool.log.Log;
 import io.github.jiayaoO3O.finder.service.ComicService;
 import io.smallrye.mutiny.Uni;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 
-import javax.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 
 /**
  * Created by jiayao on 2021/3/23.

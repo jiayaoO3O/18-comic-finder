@@ -12,8 +12,8 @@ import io.github.jiayaoO3O.finder.service.TaskService;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.QuarkusApplication;
 import io.quarkus.runtime.annotations.QuarkusMain;
+import jakarta.inject.Inject;
 
-import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 
