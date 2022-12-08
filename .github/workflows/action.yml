@@ -48,7 +48,7 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "1"
-          prerelease: false
+          prerelease: true
           title: "finder-result"
           files: |
            /home/runner/work/finder/finder-result.zip
