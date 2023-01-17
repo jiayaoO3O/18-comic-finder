@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: 签出代码
-        uses: actions/checkout@v3.1.0
+        uses: actions/checkout@v3.3.0
       - name: 初始化JDK
         uses: actions/setup-java@v3.8.0
         with:
