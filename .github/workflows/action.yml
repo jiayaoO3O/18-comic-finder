@@ -4,6 +4,7 @@
 name: Java CI with Maven
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
@@ -34,7 +35,7 @@ jobs:
       - name: 开始下载
         run: |
           cd ./target
-          java -jar -Xms1g -Xmx7g ./*.jar
+          java -jar -Xms1g -Xmx7g ./*.jar -comic.request.cookie=${{secrets.COOKIE}}
           7z a -r "/home/runner/work/finder/finder-result.zip" "/home/runner/work/finder/*"
 #       - name: 开始上传
 #         uses: actions/upload-artifact@v2.2.2
