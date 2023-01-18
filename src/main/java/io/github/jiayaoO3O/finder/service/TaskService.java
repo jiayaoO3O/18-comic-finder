@@ -305,7 +305,7 @@ public class TaskService {
                 .putHeader("dnt", "1")
                 .putHeader("upgrade-insecure-requests", " 1")
                 .putHeader("pragma", " no-cache");
-        //cookie.ifPresent(cook -> request.putHeader("cookie", cook));
+        cookie.ifPresent(cook -> request.putHeader("cookie", cook));
         return request.send()
                 .chain(response -> this.checkResponseStatus(url, response))
                 .onFailure()
