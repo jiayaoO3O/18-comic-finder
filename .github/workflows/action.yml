@@ -33,9 +33,11 @@ jobs:
         run: |
           mvn -B clean package -Dmaven.test.skip=true --file pom.xml -T 4
       - name: 开始下载
+        env:
+          COOKIE: ${{secrets.COOKIE}}
         run: |
           cd ./target
-          java -jar -Xms1g -Xmx7g ./*.jar -comic.request.cookie=${{secrets.COOKIE}}
+          java -jar -Xms1g -Xmx7g ./*.jar
           7z a -r "/home/runner/work/finder/finder-result.zip" "/home/runner/work/finder/*"
 #       - name: 开始上传
 #         uses: actions/upload-artifact@v2.2.2
