@@ -33,8 +33,6 @@ jobs:
         run: |
           mvn -B clean package -Dmaven.test.skip=true --file pom.xml -T 4
       - name: 开始下载
-        env:
-          COOKIE: ${{secrets.COOKIE}}
         run: |
           cd ./target
           java -jar -Xms1g -Xmx7g ./*.jar
