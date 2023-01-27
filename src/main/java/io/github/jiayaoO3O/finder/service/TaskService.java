@@ -26,9 +26,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
-import java.time.Duration;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -47,6 +46,13 @@ public class TaskService {
     @ConfigProperty(name = "comic.download.path")
     String downloadPath;
 
+    @ConfigProperty(name = "comic.domain.list")
+    List<String> domainList;
+
+    static String domain;
+
+    LongAdder domainAdder = new LongAdder();
+
     @Inject
     Vertx vertx;
 
@@ -64,7 +70,8 @@ public class TaskService {
 
     public Uni<List<ChapterEntity>> processChapterInfo(String body, String homePage) {
         List<ChapterEntity> chapterEntities = new ArrayList<>();
-        var host = "https://" + StrUtil.subBetween(homePage, "//", "/");
+        //var host = "https://" + StrUtil.subBetween(homePage, "//", "/");
+        var host = "https://" + domain;
         var isSingleChapter = StrUtil.subBetween(body, "<ul class=\"btn-toolbar", "</ul>") == null;
         if(isSingleChapter) {
             //说明该漫画是单章漫画,没有区分章节,例如王者荣耀图鉴类型的https://18comic.vip/album/203961
@@ -112,7 +119,7 @@ public class TaskService {
                 log.error(StrUtil.format("获取章节信息失败->解析漫画url/name/id为空,跳过本章节"));
                 continue;
             }
-            var chapterEntity = new ChapterEntity(Integer.parseInt(id), name, host + url);
+            var chapterEntity = new ChapterEntity(Integer.parseInt(id), name, domain + url);
             chapterEntities.add(chapterEntity);
         }
         return Uni.createFrom()
@@ -307,11 +314,20 @@ public class TaskService {
                 .putHeader("pragma", " no-cache");
         //cookie.ifPresent(cook -> request.putHeader("cookie", cook));
         return request.send()
-                .chain(response -> this.checkResponseStatus(url, response))
+                .chain(response -> this.checkResponseStatus(url, response));
+    }
+
+    public Uni<HttpResponse<Buffer>> postRetry(String url) {
+        return this.post(url)
                 .onFailure()
-                .retry()
-                .withBackOff(Duration.ofSeconds(4L))
-                .atMost(10);
+                .recoverWithUni(response -> {
+                    domainAdder.increment();
+                    if(domainAdder.intValue() > domainList.size()) {
+                        throw new IllegalStateException("全部域名存在访问限制!");
+                    } else {
+                        return this.postRetry(StrUtil.replace(url, StrUtil.subBetween(url, "//", "/"), domainList.get(domainAdder.intValue() - 1)));
+                    }
+                });
     }
 
     private Uni<HttpResponse<Buffer>> checkResponseStatus(String url, HttpResponse<Buffer> response) {
@@ -335,6 +351,7 @@ public class TaskService {
             log.error(StrUtil.format("发送请求[{}]->发现cloudflare反爬虫验证, 正在进入重试:[We are checking your browser...]", url));
             throw new IllegalStateException("We are checking your browser...");
         }
+        domain = StrUtil.subBetween(url, "//", "/");
         return Uni.createFrom()
                 .item(response);
     }
