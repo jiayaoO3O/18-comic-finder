@@ -119,7 +119,7 @@ public class TaskService {
                 log.error(StrUtil.format("获取章节信息失败->解析漫画url/name/id为空,跳过本章节"));
                 continue;
             }
-            var chapterEntity = new ChapterEntity(Integer.parseInt(id), name, domain + url);
+            var chapterEntity = new ChapterEntity(Integer.parseInt(id), name, host + url);
             chapterEntities.add(chapterEntity);
         }
         return Uni.createFrom()
