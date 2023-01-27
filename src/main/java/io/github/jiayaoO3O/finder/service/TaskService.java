@@ -140,7 +140,7 @@ public class TaskService {
                     if(StrUtil.containsAny(photo, ".jpg", ".webp", ".png")) {
                         photo = StrUtil.removeAll(photo, " id=\"");
                         var urlAndName = StrUtil.splitToArray(photo, "\"");
-                        var photoEntity = new PhotoEntity(StrUtil.trim(urlAndName[ 1 ]), StrUtil.trim(urlAndName[ 0 ]));
+                        var photoEntity = new PhotoEntity(StrUtil.trim(urlAndName[ 1 ]), StrUtil.trim(StrUtil.replace(urlAndName[ 0 ], StrUtil.subBetween(urlAndName[ 0 ], "//", "/"), domain)));
                         photoEntities.add(photoEntity);
                         log.info(StrUtil.format("{}:chapter:[{}]-photo:[{}]-url:[{}]", this.clickPhotoCounter(true), chapterEntity.name(), photoEntity.name(), photoEntity.url()));
                     }
