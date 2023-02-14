@@ -256,7 +256,11 @@ public class TaskService {
             }
             String md5 = MD5.digestHex(chapterId + photoId);
             char c = md5.charAt(md5.length() - 1);
-            piece = rule[ c % 10 ];
+            int mod = 10;
+            if(chapterId >= 421926) {
+                mod = 8;
+            }
+            piece = rule[ c % mod ];
         }
         return this.reverseImage(bufferedImage, chapterId, piece);
     }
