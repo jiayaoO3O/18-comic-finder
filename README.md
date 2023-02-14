@@ -21,6 +21,7 @@ java这门语言能让小项目变成中项目, 中项目变成大项目 🤡
 
 |       更新日期       | 更新内容 |
 |:----------------:|:-----------------|
+| 2023/02/14 17:00  | **感谢@AragonSnow提供的最新图片切割算法, 大家情人节看漫快乐👀**|
 | 2023/01/27 17:00  | **支持遇到反爬虫五秒盾时自动切换域名**|
 | 2023/01/24 17:00  | 同步跟进quarkus框架到3.0.0.Alpha3版本，surefire-plugin更新到3.0.0-M8|
 | 2022/12/8 11:00  | 同步跟进quarkus框架到3.0.0.Alpha2版本.|
@@ -188,6 +189,7 @@ http://localhost:7788/finder/download?homePage=https://18comic.org/photo/211115
 
 ## 鸣谢列表
 
+- [@AragonSnow](https://github.com/AragonSnow) : 提供了新版禁漫天堂前端切割算法.
 - [@lizongcong](https://github.com/lizongcong) : 提供了只有更新json文件才会触发action的建议.
 - [@calject](https://github.com/calject) : 提供了新版禁漫天堂前端切割算法.
 - [@Yiyi-philosophy](https://github.com/Yiyi-philosophy) : 提供了直接将.webp转换为.jpg的建议.
