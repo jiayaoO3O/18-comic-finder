@@ -1,9 +1,9 @@
-name: rm
+name: py
 
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'py/jm.py'
       - '.github/workflows/py.yml'
