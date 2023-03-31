@@ -1,0 +1,43 @@
+name: rm
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'py/jm.py'
+      - '.github/workflows/py.yml'
+  workflow_dispatch:
+  watch:
+    types: [started]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.repository.owner.id }} == ${{ github.event.sender.id }}
+    steps:
+      - uses: actions/checkout@main
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: 依赖包
+        run: |
+          pip install --upgrade pip
+          pip install urllib3
+          pip install jmcomic
+
+      - name: 运行
+        run: |
+          python3 py/jm.py
+          7z a -r "py/jm/z.zip" "py/*"
+
+      - name: 自动释放
+        uses: marvinpinto/action-automatic-releases@v1.2.1
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "1"
+          prerelease: true
+          title: "JM"
+          files: |
+           function/jm/jm.zip
