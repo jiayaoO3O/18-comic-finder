@@ -30,14 +30,14 @@ jobs:
       - name: 运行
         run: |
           python3 py/jm.py
-          
+
       - name: 开始上传
         uses: actions/upload-artifact@v3.1.2
         with:
           # Artifact name
           name: finder-result
           # A file, directory or wildcard pattern that describes what to upload
-          path: ./py
+          path: /home/runner/work/18-comic-finder/18-comic-finder/
           # The desired behavior if no files are found using the provided path.
           if-no-files-found: warn
           # Duration after which artifact will expire in days. 0 means using default retention.Minimum 1 day. Maximum 90 days unless changed from the repository settings page.
