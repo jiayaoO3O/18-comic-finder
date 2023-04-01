@@ -40,7 +40,11 @@ jobs:
           path: |
             /home/runner/work/18-comic-finder/18-comic-finder/
             !/home/runner/work/18-comic-finder/18-comic-finder/py/*
-            !/home/runner/work/18-comic-finder/18-comic-finder/src/*
+            !/home/runner/work/18-comic-finder/18-comic-finder/java/*
+            !/home/runner/work/18-comic-finder/18-comic-finder/.github/*
+            !/home/runner/work/18-comic-finder/18-comic-finder/.git/*
+            !/home/runner/work/18-comic-finder/18-comic-finder/LICENSE
+            !/home/runner/work/18-comic-finder/18-comic-finder/README.md
           # The desired behavior if no files are found using the provided path.
           if-no-files-found: warn
           # Duration after which artifact will expire in days. 0 means using default retention.Minimum 1 day. Maximum 90 days unless changed from the repository settings page.
