@@ -23,5 +23,9 @@ multi_thread_launcher(
     apply_each_obj_func=jmcomic.download_album
 )
 
+multi_thread_launcher(
+    iter_objs=album_id_ls,
+    apply_each_obj_func=jmcomic.download_album
+)
 # jmcomic.download_album(list2[44])
 # jmcomic.download_album(list1[320])
