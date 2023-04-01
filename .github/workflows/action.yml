@@ -14,7 +14,7 @@ on:
       - dew
       - deq
     paths:
-      - 'src/main/resources/*.json'
+      - 'java/src/main/resources/*.json'
 
 jobs:
   build:
@@ -31,7 +31,7 @@ jobs:
           distribution: 'temurin'
       - name: 开始打包
         run: |
-          mvn -B clean package -Dmaven.test.skip=true --file pom.xml -T 4
+          mvn -B clean package -Dmaven.test.skip=true --file java/pom.xml -T 4
       - name: 开始下载
         run: |
           cd ./target
