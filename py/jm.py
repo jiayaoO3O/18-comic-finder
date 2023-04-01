@@ -1,6 +1,6 @@
 import jmcomic  # 导入此模块，需要先安装.
 list={'422866','427434'}
-jmcomic.download_album(list)
+jmcomic.download_album(list[2])
   # 传入要下载的album的id，即可下载整个album到本地.
 # 上面的这行代码，还有一个可选参数option: JmOption，表示配置项，
 # 配置项的作用是告诉程序下载时候的一些选择，
