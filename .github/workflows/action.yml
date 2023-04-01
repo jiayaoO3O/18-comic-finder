@@ -14,6 +14,7 @@ on:
       - dew
       - deq
     paths:
+      - './.github/workflows/action.yml'
       - 'java/src/main/resources/*.json'
 
 jobs:
