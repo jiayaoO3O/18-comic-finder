@@ -34,7 +34,7 @@ jobs:
           mvn -B clean package -Dmaven.test.skip=true --file java/pom.xml -T 4
       - name: 开始下载
         run: |
-          cd ./target
+          cd ./java/target
           java -jar -Xms1g -Xmx7g ./*.jar
           7z a -r "/home/runner/work/finder/finder-result.zip" "/home/runner/work/finder/*"
 
