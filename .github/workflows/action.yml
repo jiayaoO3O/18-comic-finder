@@ -16,9 +16,9 @@ jobs:
 
     steps:
       - name: 签出代码
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.5.0
       - name: 初始化JDK
-        uses: actions/setup-java@v3.5.1
+        uses: actions/setup-java@v3.11.0
         with:
           java-version: '19'
           distribution: 'temurin'
