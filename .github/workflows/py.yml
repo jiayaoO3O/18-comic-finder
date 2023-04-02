@@ -28,8 +28,8 @@ jobs:
 
       - name: 运行下载脚本
         run: |
-          cd py
-          python3 py/jm.py
+          cd py/
+          python3 jm.py
 
       - name: 开始上传
         uses: actions/upload-artifact@v3.1.2
