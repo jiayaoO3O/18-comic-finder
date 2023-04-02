@@ -15,7 +15,6 @@ JM438251
 ''')
 jm_albums1 = str_to_list('''
 340972
-438214
 ''')
 
 def get_option():
