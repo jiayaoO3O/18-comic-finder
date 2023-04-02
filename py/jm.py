@@ -22,7 +22,7 @@ def get_option():
     return option
 
 
-download_album(jm_albums1， option=get_option())
+# download_album(jm_albums1， option=get_option())
 download_album(jm_albums， option=get_option())
 # jmcomic.download_album(list2[44])
 # jmcomic.download_album(list1[320])
