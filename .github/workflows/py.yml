@@ -28,7 +28,7 @@ jobs:
 
       - name: 运行下载脚本
         run: |
-          cd py/
+          cd py
           python3 py/jm.py
 
       - name: 开始上传
