@@ -2,9 +2,7 @@ name: 下载JM本子
 
 on:
   push:
-    branches: [ "workflow" ]
   pull_request:
-    branches: [ "workflow" ]
 
 permissions:
   contents: read
