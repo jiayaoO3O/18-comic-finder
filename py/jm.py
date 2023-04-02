@@ -1,5 +1,6 @@
 import jmcomic # 导入此模块， 需要先安装.
-from common import str_to_list, multi_thread_launcher
+from jmcomic import *
+# from common import str_to_list, multi_thread_launcher
 
 list2 = [
     '421045','372005','400995','400314','400308','334745','378628','351601','350287','340044','334761','334739','421055','359855','419021','359853','414125','355620','401484','359547','407816','347564','416152','345426','416643','342827','416660','399326','419020','368703','408314','376160','405306','404404','364360','404380','401119','422448','422449','423370','424778','437567','436327','433255','435226','432467'
@@ -18,14 +19,12 @@ album_id_ls2: list[str] = str_to_list('''
 387169
 310665
 ''')
-multi_thread_launcher(
-    iter_objs=album_id_ls2,
-    apply_each_obj_func=jmcomic.download_album
-)
 
-multi_thread_launcher(
-    iter_objs=album_id_ls,
-    apply_each_obj_func=jmcomic.download_album
-)
+
+def get_option():
+    option = create_option('../../assets/config/workflow_config.yml')
+    return option
+
+download_album(jm_albums， option=get_option())
 # jmcomic.download_album(list2[44])
 # jmcomic.download_album(list1[320])
