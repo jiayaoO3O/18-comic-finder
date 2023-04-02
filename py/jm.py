@@ -1,4 +1,4 @@
-import jmcomic # 导入此模块， 需要先安装.
+# import jmcomic # 导入此模块， 需要先安装.
 from jmcomic import *
 # from common import str_to_list, multi_thread_launcher
 
