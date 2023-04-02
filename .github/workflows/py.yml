@@ -24,10 +24,9 @@ jobs:
       - name: 依赖包
         run: |
           pip install --upgrade pip
-          pip install urllib3
-          pip install jmcomic
+          pip install jmcomic -i https://pypi.org/project --upgrade
 
-      - name: 运行
+      - name: 运行下载脚本
         run: |
           python3 py/jm.py
 
