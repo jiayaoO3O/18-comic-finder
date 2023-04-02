@@ -21,7 +21,7 @@ jm_albums1 = str_to_list('''
 ''')
 
 def get_option():
-    option = create_option('../**/assets/config/workflow_config.yml')
+    option = create_option('../assets/config/workflow_config.yml')
     return option
 
 
