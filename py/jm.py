@@ -11,11 +11,7 @@ list1 = [
     ]
 
 jm_albums = str_to_list('''
-438251
-438055
-436327
-433255
-419021
+JM438251
 ''')
 jm_albums1 = str_to_list('''
 340972
