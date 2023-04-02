@@ -1,6 +1,6 @@
 !!python/object:jmcomic.jm_option.JmOption
 dir_tree: !!python/object:jmcomic.jm_option.DownloadDirTree
-  Bd: /home/runner/work/jmcomic/download/
+  Bd: /home/runner/work/18-comic-finder/download/
   flag: Bd_Author_Title_Image
 
 download_convert_image_suffix: null
