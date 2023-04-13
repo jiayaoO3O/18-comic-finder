@@ -11,10 +11,15 @@ list1 = [
     ]
 
 jm_albums = str_to_list('''
-JM438251
+86076
+439634
+439633
+440190
+439570
 ''')
 jm_albums1 = str_to_list('''
-340972
+440097
+439123
 ''')
 
 def get_option():
