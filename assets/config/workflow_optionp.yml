@@ -1,6 +1,6 @@
 !!python/object:jmcomic.jm_option.JmOption
 dir_tree: !!python/object:jmcomic.jm_option.DownloadDirTree
-  Bd: /home/runner/work/18-comic-finder/download/
+  Bd: /home/runner/work/18-comic-finder/downloadp/
   flag: Bd_Author_Title_Image
 
 disable_jm_module_debug: false
@@ -20,6 +20,4 @@ client_config:
     - cffi
     - cffi_Session
   meta_data:
-    proxies: null
-    allow_redirects: true
     cookies: null
