@@ -1,7 +1,3 @@
-# import jmcomic # 导入此模块， 需要先安装.
-from jmcomic import *
-# from common import str_to_list, multi_thread_launcher
-
 list2 = [
     '438055','421045','372005','400995','400314','400308','334745','378628','351601','350287','340044','334761','334739','421055','359855','419021','359853','414125','355620','401484','359547','407816','347564','416152','345426','416643','342827','416660','399326','419020','368703','408314','376160','405306','404404','364360','404380','401119','422448','422449','423370','424778','437567','436327','433255','435226','432467'
     ]
@@ -22,13 +18,45 @@ jm_albums1 = str_to_list('''
 439123
 ''')
 
-def get_option():
-    option = create_option('../assets/config/workflow_config.yml')
-    return option
 
-def get_option1():
-    option = create_option('../assets/config/workflow_configp.yml')
-    return option
+def main():
+    from jmcomic import create_option, str_to_list, download_album, print_eye_catching
 
-download_album(jm_albums1, option=get_option1())
-download_album(jm_albums, option=get_option())
+    def get_option():
+        # 读取 option 配置文件
+        option = create_option('../assets/config/workflow_option.yml')
+
+    def get_option1():
+        option = create_option('../assets/config/workflow_optionp.yml')
+
+        # 启用 client 的缓存
+        client = option.build_jm_client()
+        client.enable_cache()
+
+        # 检查环境变量中是否有禁漫的用户名和密码，如果有则登录
+
+        def get_env(name):
+            import os
+            value = os.getenv(name, None)
+
+            if value is None or value == '':
+                return None
+
+            return value
+
+        username = get_env('JM_USERNAME')
+        password = get_env('JM_PASSWORD')
+
+        if username is not None and password is not None:
+            client.login(username, password, True)
+            print_eye_catching(f'登录禁漫成功')
+
+        return option
+
+    # 调用jmcomic的download_album方法，下载漫画
+    download_album(str_to_list(jm_albums), option=get_option())
+    download_album(str_to_list(jm_albums1), option=get_option1())
+
+
+if __name__ == '__main__':
+    main()
