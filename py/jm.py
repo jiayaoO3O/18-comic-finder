@@ -19,8 +19,8 @@ jm_albums = '''
 444342
 211700
 444110
-'''
-jm_albums1 = '''
+
+
 435226
 447019
 445815
@@ -87,7 +87,6 @@ def main():
 
     # 调用jmcomic的download_album方法，下载漫画
     download_album(str_to_list(jm_albums), option=get_option())
-    download_album(str_to_list(jm_albums1), option=get_option1())
 
 
 if __name__ == '__main__':

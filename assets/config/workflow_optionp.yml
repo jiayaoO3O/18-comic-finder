@@ -1,7 +1,0 @@
-# Github Actions 下载脚本配置
-
-version: '2.0'
-
-dir_rule:
-  base_dir: /home/runner/work/18-comic-finder/downloadp/
-  rule: Bd_Aauthor_Atitle_Pindex
