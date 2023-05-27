@@ -5,6 +5,9 @@ version: '2.0'
 dir_rule:
   base_dir: /home/runner/work/18-comic-finder/download/
   rule: Bd_Aauthor_Atitle_Pindex
-  domain:
-    - jm-comic.org
-    - jm-comic2.cc
+
+client:
+  postman:
+    meta_data:
+      headers:
+        referer: https://18comic.vip/
