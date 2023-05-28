@@ -1,7 +1,10 @@
-from jmcomic import create_option, str_to_list, download_album, print_eye_catching
-
+# 下方填入你要下载的本子的id，一行一个。
+# 每行的首尾可以有空白字符
 jm_albums = '''
-454458
+380460
+
+
+
 '''
 
 
@@ -11,6 +14,7 @@ def main():
     def get_option():
         # 读取 option 配置文件
         option = create_option('../assets/config/workflow_option.yml')
+
         # 启用 client 的缓存
         client = option.build_jm_client()
         client.enable_cache()

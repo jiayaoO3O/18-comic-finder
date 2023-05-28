@@ -4,10 +4,18 @@
 name: Java CI with Maven
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ master ]
+    branches:
+      - master
+      - dev
+      - des
+      - dea
+      - dew
+      - deq
     paths:
-      - 'src/main/resources/*.json'
+      - '.github/workflows/action.yml'
+      - 'java/src/main/resources/*.json'
 
 jobs:
   build:
@@ -24,19 +32,32 @@ jobs:
           distribution: 'temurin'
       - name: 开始打包
         run: |
-          mvn -B clean package -Dmaven.test.skip=true --file pom.xml -T 4
+          mvn -B clean package -Dmaven.test.skip=true --file java/pom.xml -T 4
       - name: 开始下载
         run: |
-          cd ./target
+          cd ./java/target
           java -jar -Xms1g -Xmx7g ./*.jar
-      - name: 开始上传
-        uses: actions/upload-artifact@v3.1.2
+          7z a -r "/home/runner/work/finder/finder-result.zip" "/home/runner/work/finder/*"
+
+      # - name: 开始上传
+      #   uses: actions/upload-artifact@v3.1.2
+      #   with:
+      #     # Artifact name
+      #     name: finder-result
+      #     # A file, directory or wildcard pattern that describes what to upload
+      #     path: /home/runner/work/finder
+      #     # The desired behavior if no files are found using the provided path.
+      #     if-no-files-found: warn
+      #     # Duration after which artifact will expire in days. 0 means using default retention.Minimum 1 day. Maximum 90 days unless changed from the repository settings page.
+      #     retention-days: 2
+
+      - name: 自动释放
+        uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
-          # Artifact name
-          name: finder-result
-          # A file, directory or wildcard pattern that describes what to upload
-          path: /home/runner/work/finder
-          # The desired behavior if no files are found using the provided path.
-          if-no-files-found: warn
-          # Duration after which artifact will expire in days. 0 means using default retention.Minimum 1 day. Maximum 90 days unless changed from the repository settings page.
-          retention-days: 90
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "1"
+          prerelease: true
+          title: "finder-result"
+          files: |
+           /home/runner/work/finder/finder-result.zip
+

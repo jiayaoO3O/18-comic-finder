@@ -17,6 +17,47 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.repository.owner.id }} == ${{ github.event.sender.id }}
     steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: 依赖包
+        run: |
+          python -m pip install --upgrade pip
+          pip install jmcomic -i https://pypi.org/project --upgrade
+
+      - name: 运行下载脚本
+        env:
+          JM_USERNAME: ${{ secrets.JM_USERNAME }}
+          JM_PASSWORD: ${{ secrets.JM_PASSWORD }}
+        run: |
+          cd py/
+          python3 jm.py
+
+      - name: 压缩下载的漫画
+        run: |
+          cd /home/runner/work/18-comic-finder/download/
+          tar -zcvf ../下载完成的本子.tar.gz ./
+name: py
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'py/jm.py'
+      - '.github/workflows/py.yml'
+      - 'assets/config/*.yml'
+  workflow_dispatch:
+  watch:
+    types: [started]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.repository.owner.id }} == ${{ github.event.sender.id }}
+    steps:
       - uses: actions/checkout@main
       - uses: actions/setup-python@v4
         with:
@@ -36,11 +77,11 @@ jobs:
         uses: actions/upload-artifact@v3.1.2
         with:
           # Artifact name
-          name: finder-result
+          name: finder
           # A file, directory or wildcard pattern that describes what to upload
           path: |
-            /home/runner/work/18-comic-finder/download/
+            /home/runner/work/18-comic-finder/下载完成的本子.tar.gz
           # The desired behavior if no files are found using the provided path.
           if-no-files-found: warn
           # Duration after which artifact will expire in days. 0 means using default retention.Minimum 1 day. Maximum 90 days unless changed from the repository settings page.
-          retention-days: 3
+          retention-days: 10
