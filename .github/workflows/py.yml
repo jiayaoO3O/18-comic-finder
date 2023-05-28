@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - py
     paths:
       - 'py/jm.py'
       - '.github/workflows/py.yml'
