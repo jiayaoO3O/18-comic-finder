@@ -1,0 +1,42 @@
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+
+name: Java CI with Maven
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'src/main/resources/*.json'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 签出代码
+        uses: actions/checkout@v3.3.0
+      - name: 初始化JDK
+        uses: actions/setup-java@v3.5.1
+        with:
+          java-version: '19'
+          distribution: 'temurin'
+      - name: 开始打包
+        run: |
+          mvn -B clean package -Dmaven.test.skip=true --file pom.xml -T 4
+      - name: 开始下载
+        run: |
+          cd ./target
+          java -jar -Xms1g -Xmx7g ./*.jar
+      - name: 开始上传
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          # Artifact name
+          name: finder-result
+          # A file, directory or wildcard pattern that describes what to upload
+          path: /home/runner/work/finder
+          # The desired behavior if no files are found using the provided path.
+          if-no-files-found: warn
+          # Duration after which artifact will expire in days. 0 means using default retention.Minimum 1 day. Maximum 90 days unless changed from the repository settings page.
+          retention-days: 90
