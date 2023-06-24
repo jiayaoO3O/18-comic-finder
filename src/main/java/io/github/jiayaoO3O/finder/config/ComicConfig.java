@@ -6,12 +6,13 @@ import io.vertx.core.net.ProxyType;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.ext.web.client.WebClient;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import jakarta.ws.rs.Produces;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
-import javax.inject.Named;
+
 import java.util.Optional;
 
 /**
@@ -38,8 +39,9 @@ public class ComicConfig {
                     .setType(ProxyType.HTTP));
         }
         webClientOptions.setUserAgentEnabled(true);
-        webClientOptions.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36 Hutool");
+        webClientOptions.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36 Edg/107.0.1418.26");
         webClientOptions.setProtocolVersion(HttpVersion.HTTP_1_1);
+        webClientOptions.addEnabledSecureTransportProtocol("TLSv1.3");
         webClientOptions.setKeepAlive(true);
         webClientOptions.setFollowRedirects(true);
         webClientOptions.setVerifyHost(false);

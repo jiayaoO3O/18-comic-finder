@@ -5,5 +5,5 @@ import java.util.Date;
 /**
  * Created by jiayao on 2021/3/23.
  */
-public record ChapterEntity(int id, String name, String url, Date updatedAt) {
+public record ChapterEntity(int id, String name, String url) {
 }

@@ -12,8 +12,8 @@ import io.github.jiayaoO3O.finder.service.TaskService;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.QuarkusApplication;
 import io.quarkus.runtime.annotations.QuarkusMain;
+import jakarta.inject.Inject;
 
-import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 
@@ -45,10 +45,8 @@ public class ComicRunner implements QuarkusApplication {
             log.info("下载列表为空,终止任务");
             return 0;
         }
-        comicHomePages.forEach(url -> comicService.getComicInfo(url)
-                .subscribe()
-                .with(body -> comicService.consumeComic(url, body)));
-        while(!taskService.exit()) {
+        comicHomePages.forEach(comicService::processComic);
+        while(!taskService.processExit()) {
             ThreadUtil.sleep(8000L);
         }
         log.info("任务结束,看漫愉快");
