@@ -16,13 +16,15 @@ java这门语言能让小项目变成中项目, 中项目变成大项目 🤡
 
 **⚠因为下载器是根据网页结构进行分析的, 如果禁漫天堂的页面进行了更新, 很可能会下载失败, 所以当使用过程中发现报错,下载失败,缺章漏页, 请提交issue通知我更新代码.**
 
-**⚠2022-11-08 最近禁漫天堂.vip主站开启了反爬虫五秒盾, 如果发现使用.vip的漫画url无法下载, 可以尝试将.vip替换成.org.**
-
 
 ## 更新记录
 
 |       更新日期       | 更新内容 |
 |:----------------:|:-----------------|
+| 2023/02/16 17:00  |  compiler-plugin更新到3.10.1版本，surefire-plugin更新到3.0.0-M9|
+| 2023/02/14 17:00  | **感谢@AragonSnow提供的最新图片切割算法, 大家情人节看漫快乐👀**|
+| 2023/01/27 17:00  | **支持遇到反爬虫五秒盾时自动切换域名**|
+| 2023/01/24 17:00  | 同步跟进quarkus框架到3.0.0.Alpha3版本，surefire-plugin更新到3.0.0-M8|
 | 2022/12/8 11:00  | 同步跟进quarkus框架到3.0.0.Alpha2版本.|
 | 2022/11/15 17:00  | **支持直接将.webp格式转换为.jpg格式, 以免腾不出手的各位每次都双击打开下一张.**|
 | 2022/11/15 17:00  | 同步跟进quarkus框架到3.0.0.Alpha1版本.|
@@ -246,6 +248,7 @@ http://localhost:7788/finder/download?homePage=https://18comic.vip/photo/211115
 
 ## 鸣谢列表
 
+- [@AragonSnow](https://github.com/AragonSnow) : 提供了新版禁漫天堂前端切割算法.
 - [@lizongcong](https://github.com/lizongcong) : 提供了只有更新json文件才会触发action的建议.
 - [@calject](https://github.com/calject) : 提供了新版禁漫天堂前端切割算法.
 - [@Yiyi-philosophy](https://github.com/Yiyi-philosophy) : 提供了直接将.webp转换为.jpg的建议.
