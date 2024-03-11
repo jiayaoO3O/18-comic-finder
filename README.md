@@ -1,5 +1,7 @@
 # 禁漫天堂下载器
-
+[
+  "https://18comic.vip/album/180459"
+]
 使用GitHub Actions的禁漫天堂爬虫🤡
 
 java这门语言能让小项目变成中项目, 中项目变成大项目 🤡
